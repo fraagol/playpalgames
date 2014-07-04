@@ -6,7 +6,7 @@
         <init-param>
             <param-name>services</param-name>
             <param-value>com.playpalgames.backend.RegistrationEndpoint,
-                com.playpalgames.backend.MessagingEndpoint3</param-value>
+                com.playpalgames.backend.MessagingEndpoint</param-value>
         </init-param>
     </servlet>
     <servlet-mapping>

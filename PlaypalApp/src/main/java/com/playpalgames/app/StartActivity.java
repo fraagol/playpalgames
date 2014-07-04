@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.ActionBarActivity;
@@ -16,7 +17,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesUtil;
@@ -26,7 +29,10 @@ import com.google.api.client.extensions.android.json.AndroidJsonFactory;
 import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
 import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
+
+import com.playpalgames.backend.messaging.Messaging;
 import com.playpalgames.backend.registration.Registration;
+import com.playpalgames.backend.registration.model.RegistrationRecord;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
@@ -36,19 +42,22 @@ import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @EActivity(R.layout.activity_start)
-public class StartActivity extends ActionBarActivity {
+public class StartActivity extends ActionBarActivity implements NumberSelectionDialogFragment.NumberDialogListener {
 
     public static final String EXTRA_MESSAGE = "message";
 
+    public static final String PREFERENCE_LOCAL_SERVER="LOCAL_SERVER";
 
     /**
      * Substitute you own sender ID here. This is the project number you got
      * from the API Console, as described in "Getting Started."
      */
     String SENDER_ID = "292303650809";
+
 
     /**
      * Tag used on log messages.
@@ -65,6 +74,9 @@ public class StartActivity extends ActionBarActivity {
     @ViewById(R.id.button1)
     Button button1;
 
+    @ViewById(R.id.serverCheckbox)
+    CheckBox serverCheckBox;
+
     @ViewById(R.id.textView)
     TextView text;
 
@@ -72,9 +84,10 @@ public class StartActivity extends ActionBarActivity {
     TextView logTextView;
     String auxLog = "";
 
+    SharedPreferences preferences;
 
-
-
+    List<RegistrationRecord> list;
+    String[]numbersStringArray;
 
     @UiThread
     void log(String msg) {
@@ -91,8 +104,40 @@ public class StartActivity extends ActionBarActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = getApplicationContext();
-        log("starting" + Utils.getPhoneNumber(this));
+        preferences= getSharedPreferences(StartActivity.class.getSimpleName(), Context.MODE_PRIVATE);
+
+
         initGcm();
+    }
+
+    @AfterViews
+    void afterViews(){
+       populateFieldsFromPreferences();
+    }
+
+    void populateFieldsFromPreferences(){
+
+        serverCheckBox.setChecked(preferences.getBoolean(PREFERENCE_LOCAL_SERVER,false));
+    }
+
+    @Click
+    void serverCheckbox(){
+
+        editPreference(PREFERENCE_LOCAL_SERVER,serverCheckBox.isChecked());
+    }
+
+    private void editPreference(String key,Boolean value)
+    {
+        preferences.edit().putBoolean(key, value).commit();
+    }
+
+    private boolean getPreferenceBoolean(String key)
+    {
+        return preferences.getBoolean(key,false);
+    }
+
+    private boolean isLocalServer(){
+        return getPreferenceBoolean(PREFERENCE_LOCAL_SERVER);
     }
 
     @Override
@@ -104,7 +149,7 @@ public class StartActivity extends ActionBarActivity {
     @Background
      void  initGcm(){
         gcmRegistrer = GcmRegistrer.instance(context,
-                                            getSharedPreferences(StartActivity.class.getSimpleName(), Context.MODE_PRIVATE),
+                                            preferences,
                                             SENDER_ID);
         try {
            if (gcmRegistrer.checkAndRegisterGCM()) {
@@ -145,6 +190,14 @@ public class StartActivity extends ActionBarActivity {
     @Click
     void button1() {
         unregister();
+    }
+
+    @Click
+    void pingButton(){
+
+        FragmentManager fm = getSupportFragmentManager();
+        NumberSelectionDialogFragment numberSelectionDialogFragment = new NumberSelectionDialogFragment(numbersStringArray);
+        numberSelectionDialogFragment.show(fm, "fragment_select_number");
     }
 
 
@@ -193,53 +246,6 @@ private boolean isRegistered(){
         log(s);
     }
 
-//    /**
-//     * Registers the application with GCM servers asynchronously.
-//     * <p/>
-//     * Stores the registration ID and the app versionCode in the application's
-//     * shared preferences.
-//     */
-//    private void registerInBackground() {
-//        log("registering in background");
-//        new AsyncTask<Void, Void, String>() {
-//            @Override
-//            protected String doInBackground(Void... params) {
-//                String msg = "";
-//                try {
-//                    if (gcm == null) {
-//                        gcm = GoogleCloudMessaging.getInstance(context);
-//                    }
-//                    regid = gcm.register(SENDER_ID);
-//                    msg = "Device registered, " + regid.substring(0, 10) + "...";
-//
-//                    // You should send the registration ID to your server over HTTP, so it
-//                    // can use GCM/HTTP or CCS to send messages to your app.
-//                    sendRegistrationIdToBackend();
-//
-//                    // For this demo: we don't need to send it because the device will send
-//                    // upstream messages to a server that echo back the message using the
-//                    // 'from' address in the message.
-//
-//                    } catch (IOException ex) {
-//                    msg = "Error :" + ex.getMessage();
-//                    // If there is an error, don't just keep trying to register.
-//                    // Require the user to click a button again, or perform
-//                    // exponential back-off.
-//                }
-//                return msg;
-//            }
-//
-//            @Override
-//            protected void onPostExecute(String msg) {
-//                log("registered " + msg);
-//                Log.i(TAG, msg + "\n");
-////                mDisplay.append(msg + "\n");
-//            }
-//        }.execute(null, null, null);
-//    }
-
-
-
 
     /**
      * Sends the registration ID to your server over HTTP, so it can use GCM/HTTP or CCS to send
@@ -248,25 +254,23 @@ private boolean isRegistered(){
      */
     private void sendRegistrationIdToBackend() {
         Registration.Builder reg = new Registration.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null)
-                // options for running against local devappserver
-                // - 10.0.2.2 is localhost's IP address in Android emulator
-                // - turn off compression when running against local devappserver
+                       ;
 
-                .setRootUrl("http://10.0.2.2:8080/_ah/api/")
-                .setGoogleClientRequestInitializer(new GoogleClientRequestInitializer() {
-                                                       @Override
-                                                       public void initialize(AbstractGoogleClientRequest<?> abstractGoogleClientRequest) throws IOException {
-                                                           abstractGoogleClientRequest.setDisableGZipContent(true);
-                                                       }
-                                                   }
-                );
-
+        if (isLocalServer()){
+            setBuilderToLocalServer(reg);
+        }
         Registration registration = reg.build();
         try {
             log("sending to backend");
             PhoneNumberUtil s;
 
             registration.register(gcmRegistrer.getRegistrationId(), Utils.getPhoneNumber(this)).execute();
+         list=  registration.listDevices().execute().getItems();
+            numbersStringArray= new String[list.size()];
+            for (int i=0; i<list.size();i++) {
+                log("número " + i + " : " + list.get(i).getPhoneNumber());
+                numbersStringArray[i]=list.get(i).getPhoneNumber();
+            }
             log("sent to backend");
         } catch (IOException e) {
             log(e.getMessage());
@@ -279,19 +283,11 @@ private boolean isRegistered(){
 
     private void sendUnregistrationIdToBackend(String removedId) {
         Registration.Builder reg = new Registration.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null)
-                // options for running against local devappserver
-                // - 10.0.2.2 is localhost's IP address in Android emulator
-                // - turn off compression when running against local devappserver
 
-                .setRootUrl("http://10.0.2.2:8080/_ah/api/")
-                .setGoogleClientRequestInitializer(new GoogleClientRequestInitializer() {
-                                                       @Override
-                                                       public void initialize(AbstractGoogleClientRequest<?> abstractGoogleClientRequest) throws IOException {
-                                                           abstractGoogleClientRequest.setDisableGZipContent(true);
-                                                       }
-                                                   }
-                );
-
+                ;
+        if (isLocalServer()){
+            setBuilderToLocalServer(reg);
+        }
 
         Registration registration = reg.build();
         try {
@@ -326,4 +322,48 @@ private boolean isRegistered(){
     }
 
 
+    @Override
+    @Background
+    public void onNumberPicked(String number) {
+        Messaging.Builder builder = new  Messaging.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null)
+                // options for running against local devappserver
+                // - 10.0.2.2 is localhost's IP address in Android emulator
+                // - turn off compression when running against local devappserver
+
+//                .setRootUrl("http://10.0.2.2:8080/_ah/api/")
+//                .setGoogleClientRequestInitializer(new GoogleClientRequestInitializer() {
+//                                                       @Override
+//                                                       public void initialize(AbstractGoogleClientRequest<?> abstractGoogleClientRequest) throws IOException {
+//                                                           abstractGoogleClientRequest.setDisableGZipContent(true);
+//                                                       }
+//                                                   }
+//                )
+//
+                ;
+
+  if (isLocalServer()){
+      setBuilderToLocalServer(builder);
+  }
+        Messaging messaging=builder.build();
+        try{
+
+        messaging.sendPing(number, "minumero").execute();
+        } catch (IOException e) {
+            log(e.getMessage());
+
+            e.printStackTrace();
+        }
+    }
+
+private void setBuilderToLocalServer(com.google.api.client.googleapis.services.json.AbstractGoogleJsonClient.Builder builder
+){
+    builder.setRootUrl("http://10.0.2.2:8080/_ah/api/")
+                .setGoogleClientRequestInitializer(new GoogleClientRequestInitializer() {
+                                                       @Override
+                                                       public void initialize(AbstractGoogleClientRequest<?> abstractGoogleClientRequest) throws IOException {
+                                                           abstractGoogleClientRequest.setDisableGZipContent(true);
+                                                       }
+                                                   }
+                );
+}
 }

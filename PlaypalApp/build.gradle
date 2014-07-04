@@ -14,6 +14,7 @@ android {
         targetSdkVersion 19
         versionCode 1
         versionName "1.0"
+
     }
     buildTypes {
         release {
@@ -44,6 +45,8 @@ dependencies {
     compile ('com.playpalgames.backend:registration:v1-1.18.0-rc-SNAPSHOT') {
               exclude (group: 'org.apache.httpcomponents', module: 'httpclient')
               }
-
+    compile ('com.playpalgames.backend:messaging:v1-1.18.0-rc-SNAPSHOT') {
+        exclude (group: 'org.apache.httpcomponents', module: 'httpclient')
+    }
 
 }

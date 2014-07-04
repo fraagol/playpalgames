@@ -5,6 +5,7 @@ import com.google.android.gcm.server.Message;
 import com.google.android.gcm.server.Result;
 import com.google.android.gcm.server.Sender;
 import com.google.api.server.spi.config.Api;
+import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiNamespace;
 
 import java.io.IOException;
@@ -25,8 +26,8 @@ import static com.playpalgames.backend.OfyService.ofy;
  * you'd like to add authentication, take a look at the documentation.
  */
 @Api(name = "messaging", version = "v1", namespace = @ApiNamespace(ownerDomain = "backend.playpalgames.com", ownerName = "backend.playpalgames.com", packagePath=""))
-public class MessagingEndpoint3 {
-    private static final Logger log = Logger.getLogger(MessagingEndpoint3.class.getName());
+public class MessagingEndpoint {
+    private static final Logger log = Logger.getLogger(MessagingEndpoint.class.getName());
 
     /** Api Keys can be obtained from the google cloud console */
     private static final String API_KEY = "AIzaSyDqfPILfQJFKacnom3NVqNsd_WaVjbMALM";
@@ -36,6 +37,7 @@ public class MessagingEndpoint3 {
      *
      * @param message The message to send
      */
+    @ApiMethod(name = "sendMessage")
     public void sendMessage(@Named("message") String message) throws IOException {
         if(message == null || message.trim().length() == 0) {
             log.warning("Not sending message because it is empty");
@@ -48,6 +50,38 @@ public class MessagingEndpoint3 {
         Sender sender = new Sender(API_KEY);
         Message msg = new Message.Builder().addData("message", message).build();
         List<RegistrationRecord> records = ofy().load().type(RegistrationRecord.class).limit(10).list();
+        for(RegistrationRecord record : records) {
+            Result result = sender.send(msg, record.getRegId(), 5);
+            if (result.getMessageId() != null) {
+                log.info("Message sent to " + record.getRegId());
+                String canonicalRegId = result.getCanonicalRegistrationId();
+                if (canonicalRegId != null) {
+                    // if the regId changed, we have to update the datastore
+                    log.info("Registration Id changed for " + record.getRegId() + " updating to " + canonicalRegId);
+                    record.setRegId(canonicalRegId);
+                    ofy().save().entity(record).now();
+                }
+            } else {
+                String error = result.getErrorCodeName();
+                if (error.equals(Constants.ERROR_NOT_REGISTERED)) {
+                    log.warning("Registration Id " + record.getRegId() + " no longer registered with GCM, removing from datastore");
+                    // if the device is no longer registered with Gcm, remove it from the datastore
+                    ofy().delete().entity(record).now();
+                }
+                else {
+                    log.warning("Error when sending message : " + error);
+                }
+            }
+        }
+    }
+
+    @ApiMethod(name = "sendPing")
+    public void sendPing(@Named("number") String number, @Named("senderNumber") String senderNumber) throws IOException {
+
+        Sender sender = new Sender(API_KEY);
+        Message msg = new Message.Builder().addData("message", "ping from "+ senderNumber).build();
+        List<RegistrationRecord> records = ofy().load().type(RegistrationRecord.class).list();
+        List<RegistrationRecord> records2 = ofy().load().type(RegistrationRecord.class).filter("phoneNumber",number).list();
         for(RegistrationRecord record : records) {
             Result result = sender.send(msg, record.getRegId(), 5);
             if (result.getMessageId() != null) {

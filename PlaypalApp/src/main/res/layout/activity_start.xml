@@ -19,9 +19,9 @@
         android:layout_height="wrap_content"
         android:text="Unregister"
         android:id="@+id/button1"
+        android:layout_marginTop="54dp"
         android:layout_below="@+id/textView"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="51dp" />
+        android:layout_toRightOf="@+id/notifButton" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -50,6 +50,25 @@
         android:text="Notif"
         android:id="@+id/notifButton"
         android:layout_alignTop="@+id/button1"
-        android:layout_toLeftOf="@+id/button1" />
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ping"
+        android:id="@+id/pingButton"
+        android:layout_above="@+id/logTextView"
+        android:layout_toRightOf="@+id/buttonRegister" />
+
+    <CheckBox
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="localServer"
+        android:id="@+id/serverCheckbox"
+        android:layout_alignTop="@+id/logTextView"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:checked="false" />
 
 </RelativeLayout>

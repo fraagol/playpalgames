@@ -1,1 +1,1 @@
-include ':PlaypalApp', ':BackendWebapp'
+include ':PlaypalApp', ':BackendWebapp', ':javaTest'

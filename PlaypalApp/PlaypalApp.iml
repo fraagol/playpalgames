@@ -86,6 +86,7 @@
     <orderEntry type="library" exported="" name="support-v4-19.1.0" level="project" />
     <orderEntry type="library" exported="" name="google-http-client-1.18.0-rc" level="project" />
     <orderEntry type="library" exported="" name="androidannotations-api-3.0.1" level="project" />
+    <orderEntry type="library" exported="" name="messaging-v1-1.18.0-rc-SNAPSHOT" level="project" />
     <orderEntry type="library" exported="" name="libphonenumber-6.1" level="project" />
   </component>
 </module>

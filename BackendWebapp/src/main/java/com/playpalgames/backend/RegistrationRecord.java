@@ -13,7 +13,7 @@ public class RegistrationRecord {
 
     @Index
     private String regId;
-
+    @Index
     private String phoneNumber;
     // you can add more fields...
 
