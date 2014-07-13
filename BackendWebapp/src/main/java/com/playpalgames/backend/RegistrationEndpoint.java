@@ -4,10 +4,10 @@ import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.response.CollectionResponse;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
 
 import java.util.List;
 import java.util.logging.Logger;
+
 import javax.inject.Named;
 
 import static com.playpalgames.backend.OfyService.ofy;
@@ -30,22 +30,22 @@ public class RegistrationEndpoint {
     /**
      * Register a device to the backend
      *
-     * @param regId The Google Cloud Messaging registration Id to add
+     *
      */
     @ApiMethod(name = "register")
-    public void registerDevice(@Named("regId") String regId, @Named("phoneNumber") String phoneNumber) {
+    public void registerDevice(User user) {
+        String regId=user.getRegId();
         if(findRecord(regId) != null) {
             log.info("Device " + regId + " already registered, skipping register");
             return;
         }
-        PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
+        //PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
 
 
+        deleteByPhoneNumber(user.getPhoneNumber());
+        ofy().save().entity(user).now();
 
-        RegistrationRecord record = new RegistrationRecord();
-        record.setRegId(regId);
-        record.setPhoneNumber(phoneNumber);
-        ofy().save().entity(record).now();
+
     }
 
     /**
@@ -55,7 +55,7 @@ public class RegistrationEndpoint {
      */
     @ApiMethod(name = "unregister")
     public void unregisterDevice(@Named("regId") String regId) {
-        RegistrationRecord record = findRecord(regId);
+        User record = findRecord(regId);
         if(record == null) {
             log.info("Device " + regId + " not registered, skipping unregister");
             return;
@@ -69,13 +69,23 @@ public class RegistrationEndpoint {
      * @return a list of Google Cloud Messaging registration Ids
      */
     @ApiMethod(name = "listDevices")
-    public CollectionResponse<RegistrationRecord> listDevices(/*@Named("count") int count*/) {
-        List<RegistrationRecord> records = ofy().load().type(RegistrationRecord.class)/*.limit(count)*/.list();
-        return CollectionResponse.<RegistrationRecord>builder().setItems(records).build();
+    public CollectionResponse<User> listDevices(/*@Named("count") int count*/) {
+        List<User> records = ofy().load().type(User.class)/*.limit(count)*/.list();
+        return CollectionResponse.<User>builder().setItems(records).build();
     }
 
-    private RegistrationRecord findRecord(String regId) {
-        return ofy().load().type(RegistrationRecord.class).filter("regId", regId).first().now();
+    private User findRecord(String regId) {
+        return ofy().load().type(User.class).filter("regId", regId).first().now();
     }
 
+    /**
+     * Delete existing users with same phone number
+     * @param number
+     */
+    private void deleteByPhoneNumber(String number) {
+        List<User> users = ofy().load().type(User.class).filter("phoneNumber", number).list();
+        if(users.size()>0)
+            ofy().delete().entities(users);
+
+    }
 }

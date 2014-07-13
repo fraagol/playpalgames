@@ -5,6 +5,17 @@ repositories {
     mavenLocal()
 }
 
+buildscript {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:0.12.+'
+        classpath 'com.neenbedankt.gradle.plugins:android-apt:1.2'
+    }
+}
+
 android {
     compileSdkVersion 19
     buildToolsVersion "19.1.0"
@@ -46,6 +57,9 @@ dependencies {
               exclude (group: 'org.apache.httpcomponents', module: 'httpclient')
               }
     compile ('com.playpalgames.backend:messaging:v1-1.18.0-rc-SNAPSHOT') {
+        exclude (group: 'org.apache.httpcomponents', module: 'httpclient')
+    }
+    compile ('com.playpalgames.game:gameEndpoint:v1-1.18.0-rc-SNAPSHOT') {
         exclude (group: 'org.apache.httpcomponents', module: 'httpclient')
     }
 

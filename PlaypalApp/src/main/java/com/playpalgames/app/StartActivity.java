@@ -1,38 +1,27 @@
 package com.playpalgames.app;
 
-import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.os.AsyncTask;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.TaskStackBuilder;
-import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
+import android.support.v7.app.ActionBarActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GooglePlayServicesUtil;
-import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.extensions.android.json.AndroidJsonFactory;
 import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
 import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
 import com.google.i18n.phonenumbers.PhoneNumberUtil;
-
 import com.playpalgames.backend.messaging.Messaging;
 import com.playpalgames.backend.registration.Registration;
-import com.playpalgames.backend.registration.model.RegistrationRecord;
+import com.playpalgames.backend.registration.model.User;
+import com.playpalgames.game.gameEndpoint.GameEndpoint;
+import com.playpalgames.game.gameEndpoint.model.Turn;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
@@ -43,6 +32,7 @@ import org.androidannotations.annotations.ViewById;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @EActivity(R.layout.activity_start)
@@ -51,7 +41,7 @@ public class StartActivity extends ActionBarActivity implements NumberSelectionD
     public static final String EXTRA_MESSAGE = "message";
 
     public static final String PREFERENCE_LOCAL_SERVER="LOCAL_SERVER";
-
+    public static final String  PREFERENCE_USER_NAME="USER_NAME";
     /**
      * Substitute you own sender ID here. This is the project number you got
      * from the API Console, as described in "Getting Started."
@@ -86,8 +76,9 @@ public class StartActivity extends ActionBarActivity implements NumberSelectionD
 
     SharedPreferences preferences;
 
-    List<RegistrationRecord> list;
+    List<User> list;
     String[]numbersStringArray;
+    private String userName;
 
     @UiThread
     void log(String msg) {
@@ -104,15 +95,30 @@ public class StartActivity extends ActionBarActivity implements NumberSelectionD
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = getApplicationContext();
-        preferences= getSharedPreferences(StartActivity.class.getSimpleName(), Context.MODE_PRIVATE);
+        initPreferences();
 
 
         initGcm();
+
+    }
+
+    private void initPreferences() {
+        preferences= getSharedPreferences(StartActivity.class.getSimpleName(), Context.MODE_PRIVATE);
+            userName= getPreferenceString(PREFERENCE_USER_NAME);
+         if(userName==null){
+             userName=Utils.getEmail(this);
+             if(userName==null){
+                 userName="Guest"+ new Random().nextInt(1000);
+             }else{
+                 userName=userName.substring(0,userName.indexOf("@"));
+             }
+         }
     }
 
     @AfterViews
     void afterViews(){
        populateFieldsFromPreferences();
+        sendTurnToBackend();
     }
 
     void populateFieldsFromPreferences(){
@@ -135,6 +141,8 @@ public class StartActivity extends ActionBarActivity implements NumberSelectionD
     {
         return preferences.getBoolean(key,false);
     }
+
+    private String getPreferenceString(String key ){return preferences.getString(key,null);}
 
     private boolean isLocalServer(){
         return getPreferenceBoolean(PREFERENCE_LOCAL_SERVER);
@@ -263,21 +271,50 @@ private boolean isRegistered(){
         try {
             log("sending to backend");
             PhoneNumberUtil s;
+            User user= new User();
+            user.setName(userName);
+            user.setRegId(gcmRegistrer.getRegistrationId());
+            user.setPhoneNumber(Utils.getPhoneNumber(this));
 
-            registration.register(gcmRegistrer.getRegistrationId(), Utils.getPhoneNumber(this)).execute();
+            registration.register(user).execute();
          list=  registration.listDevices().execute().getItems();
             numbersStringArray= new String[list.size()];
             for (int i=0; i<list.size();i++) {
-                log("número " + i + " : " + list.get(i).getPhoneNumber());
+                log("user " + i + " : " + list.get(i).getName());
                 numbersStringArray[i]=list.get(i).getPhoneNumber();
             }
             log("sent to backend");
+
+
+
+
         } catch (IOException e) {
             log(e.getMessage());
 
             e.printStackTrace();
         }
 
+    }
+
+    @Background
+    public void sendTurnToBackend(){
+        GameEndpoint.Builder builder= new GameEndpoint.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null);
+        if (isLocalServer()){
+            setBuilderToLocalServer(builder);
+        }
+        GameEndpoint turnEndpoint=builder.build();
+        log("Sending test turn");
+        Turn turn = new Turn();
+        turn.setPlayerId(223l);
+        turn.setTurnData(new Integer(343434));
+       try{
+        turnEndpoint.insertTurn(turn).execute();
+           log("turn sent");
+    } catch (IOException e) {
+        log(e.getMessage());
+
+        e.printStackTrace();
+    }
     }
 
 
@@ -303,25 +340,7 @@ private boolean isRegistered(){
     }
 
 
-    @Click
-    void notifButton() {
-        NotificationCompat.Builder mBuilder =
-                new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.drawable.ic_launcher)
-                        .setContentTitle("My notification").setAutoCancel(true)
-                        .setContentText("Hello World!");
-        NotificationManager mNotificationManager =
-                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        //  Intent resultIntent = new Intent(this, StartActivity_.class);
-        Intent resultIntent = StartActivity_.intent(context).get();
-        resultIntent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-        PendingIntent p = PendingIntent.getActivity(context, 0, resultIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        mBuilder.setContentIntent(p);
-// mId allows you to update the notification later on.
-        mNotificationManager.notify(7, mBuilder.build());
-    }
-
-
+    
     @Override
     @Background
     public void onNumberPicked(String number) {

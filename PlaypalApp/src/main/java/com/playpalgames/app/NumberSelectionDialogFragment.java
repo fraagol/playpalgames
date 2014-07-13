@@ -7,11 +7,6 @@ import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
-import android.widget.Toast;
-
-import com.playpalgames.backend.registration.model.RegistrationRecord;
-
-import java.util.List;
 
 /**
  * Created by javi on 03/07/2014.

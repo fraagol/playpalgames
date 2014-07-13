@@ -1,1 +1,1 @@
-include ':PlaypalApp', ':BackendWebapp', ':javaTest'
+include ':PlaypalApp', ':BackendWebapp', ':testLibrary', ':core', ':desktop', ':android'

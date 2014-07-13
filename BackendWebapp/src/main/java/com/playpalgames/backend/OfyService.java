@@ -3,6 +3,8 @@ package com.playpalgames.backend;
 import com.googlecode.objectify.Objectify;
 import com.googlecode.objectify.ObjectifyFactory;
 import com.googlecode.objectify.ObjectifyService;
+import com.playpalgames.game.Match;
+import com.playpalgames.game.Turn;
 
 /**
  * Objectify service wrapper so we can statically register our persistence classes
@@ -12,7 +14,10 @@ import com.googlecode.objectify.ObjectifyService;
 public class OfyService {
 
     static {
-        ObjectifyService.register(RegistrationRecord.class);
+        ObjectifyService.register(User.class);
+        ObjectifyService.register(Turn.class);
+        ObjectifyService.register(Match.class);
+
     }
 
     public static Objectify ofy() {

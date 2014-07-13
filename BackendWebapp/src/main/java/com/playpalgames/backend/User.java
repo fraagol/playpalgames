@@ -6,18 +6,19 @@ import com.googlecode.objectify.annotation.Index;
 
 /** The Objectify object model for device registrations we are persisting */
 @Entity
-public class RegistrationRecord {
+public class User {
 
     @Id
     Long id;
 
+    String name;
+
     @Index
     private String regId;
+
     @Index
     private String phoneNumber;
-    // you can add more fields...
-
-    public RegistrationRecord() {}
+    public User() {}
 
     public String getRegId() {
         return regId;
@@ -27,11 +28,19 @@ public class RegistrationRecord {
         this.regId = regId;
     }
 
+    public String getName() {
+        return name;
+    }
+
     public String getPhoneNumber() {
         return phoneNumber;
     }
 
     public void setPhoneNumber(String phoneNumber) {
         this.phoneNumber = phoneNumber;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
