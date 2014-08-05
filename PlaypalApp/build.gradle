@@ -48,17 +48,12 @@ configurations { natives }
 dependencies {
     apt "org.androidannotations:androidannotations:3.0+"
     // add these
-    compile 'org.androidannotations:androidannotations-api:3.0+'
     // two lines
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:19.1.0'
-    compile 'com.google.android.gms:play-services:3.1.+'
-    compile 'com.googlecode.libphonenumber:libphonenumber:6.1'
     compile('com.google.http-client:google-http-client-android:1.18.0-rc') {
         exclude(group: 'com.google.android', module: 'android')
         exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
     }
-    compile 'com.google.http-client:google-http-client-jackson2:1.19.0'
 
     compile project(':core')
     compile "com.badlogicgames.gdx:gdx-backend-android:$gdxVersion"
@@ -70,6 +65,11 @@ dependencies {
     natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-armeabi-v7a"
     natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86"
     compile project(':gameLibrary')
+    compile 'org.androidannotations:androidannotations-api:3.0.+'
+    compile 'com.android.support:appcompat-v7:19.1.0'
+    compile 'com.google.android.gms:play-services:3.1.+'
+    compile 'com.googlecode.libphonenumber:libphonenumber:6.1'
+    compile 'com.google.http-client:google-http-client-jackson2:1.19.0'
 }
 
 // needed to add JNI shared libraries to APK when compiling on CLI
@@ -88,10 +88,10 @@ task copyAndroidNatives() {
 
     configurations.natives.files.each { jar ->
         def outputDir = null
-        if(jar.name.endsWith("natives-armeabi-v7a.jar")) outputDir = file("libs/armeabi-v7a")
-        if(jar.name.endsWith("natives-armeabi.jar")) outputDir = file("libs/armeabi")
-        if(jar.name.endsWith("natives-x86.jar")) outputDir = file("libs/x86")
-        if(outputDir != null) {
+        if (jar.name.endsWith("natives-armeabi-v7a.jar")) outputDir = file("libs/armeabi-v7a")
+        if (jar.name.endsWith("natives-armeabi.jar")) outputDir = file("libs/armeabi")
+        if (jar.name.endsWith("natives-x86.jar")) outputDir = file("libs/x86")
+        if (outputDir != null) {
             copy {
                 from zipTree(jar)
                 into outputDir

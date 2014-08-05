@@ -11,9 +11,7 @@ import com.playpalgames.backend.gameEndpoint.model.Turn;
 import com.playpalgames.backend.gameEndpoint.model.User;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -26,9 +24,14 @@ public class GameController {
     User user;
     GameEndpoint gameEndpoint;
     public String message="";
+    private GameClient gameClient;
+    private Turn turn=null;
+    private long lastProcessedTurnId=-1;
 
-    public static GameController createGameController(HttpTransport httpTransport, JsonFactory jsonFactory, User userP, boolean localServer) throws IOException{
-        GAME_CONTROLLER=new GameController(httpTransport,jsonFactory,userP,localServer);
+    private LinkedList<Turn> availablesTurns=null;
+
+    public static GameController createGameController(HttpTransport httpTransport, JsonFactory jsonFactory, User userP, GameClient gameClient, boolean localServer) throws IOException{
+        GAME_CONTROLLER=new GameController(httpTransport,jsonFactory,userP, gameClient, localServer);
         return GAME_CONTROLLER;
     }
 
@@ -47,19 +50,43 @@ public class GameController {
 
     }
 
-    public GameController(HttpTransport httpTransport, JsonFactory jsonFactory, User userP, boolean localServer) throws IOException {
+    public GameController(HttpTransport httpTransport, JsonFactory jsonFactory, User userP, GameClient gameClient, boolean localServer) throws IOException {
         GameEndpoint.Builder builder= new GameEndpoint.Builder(httpTransport,jsonFactory , new DisableTimeout());
         if (localServer) {
             localServer(builder);
         }
         gameEndpoint=builder.build();
         user= gameEndpoint.register(userP).execute();
+        this.gameClient=gameClient;
 
     }
 
-    public void addTurn(String[] commands){
-        System.out.println("Add Turn called");
-        message= Arrays.deepToString(commands);
+    private void initMatch(){
+        availablesTurns= new LinkedList<Turn>();
+    }
+    public void processCommand(String msg) throws IOException {
+        String [] command= msg.split(" ");
+
+        switch (command[0].charAt(0)){
+            case 'A'://challenge Accepted
+                gameClient.challengeAccepted();
+
+                break;
+            case 'C': //Challenge received
+                gameClient.incomingChallenge(command[1], command[2]);
+                break;
+            case 'T'://Turns availables
+               getTurns();
+                break;
+        }
+        }
+
+    public void getTurns() throws IOException {
+        List<Turn> turns= gameEndpoint.listTurnsFrom(getMatchId(),lastProcessedTurnId).execute().getItems();
+        for (int i = turns.size()-1; i >0; i--) {
+                availablesTurns.add(turns.get(i));
+        }
+
     }
 
     public Match createMatch() throws IOException {
@@ -76,10 +103,7 @@ public class GameController {
         Turn turn = new Turn();
         turn.setMatchId(match.getId());
         turn.setPlayerId(user.getId());
-        List list= new ArrayList();
-        list.add(o);
-        list.add(new Date());
-        turn.setTurnData(list);
+        turn.setTurnData(o);
 
         Turn t =  gameEndpoint.insertTurn(turn).execute();
         log(t);

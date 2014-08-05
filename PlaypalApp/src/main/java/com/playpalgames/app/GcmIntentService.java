@@ -88,16 +88,16 @@ public class GcmIntentService extends IntentService {
         String [] command= msg.split(" ");
 
 
-        if (command[0].equals("T")){
-            Intent intent = new Intent(StartActivity.TURN_ACTION);
-            intent.putExtra("COMMAND", command);
-            this.getApplicationContext().sendBroadcast(intent);
-            return;
-        }
+//        if (command[0].equals("T")){
+//            Intent intent = new Intent(StartActivity.TURN_ACTION);
+//            intent.putExtra("COMMAND", command);
+//            this.getApplicationContext().sendBroadcast(intent);
+//            return;
+//        }
 
         if(StartActivity.isForeground()){
             Intent intent2 = new Intent(StartActivity.DISPLAY_MESSAGE_ACTION);
-            intent2.putExtra("COMMAND", command);
+            intent2.putExtra("COMMAND", msg);
             this.getApplicationContext().sendBroadcast(intent2);
         }else
         {
@@ -108,7 +108,7 @@ public class GcmIntentService extends IntentService {
             //  intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
             intent.setAction(Intent.ACTION_MAIN);
             intent.addCategory(Intent.CATEGORY_LAUNCHER);
-            intent.putExtra("COMMAND",command);
+            intent.putExtra("COMMAND",msg);
             intent.setAction(Long.toString(System.currentTimeMillis()));
 
             PendingIntent contentIntent = PendingIntent.getActivity(this.getApplicationContext(), 0,

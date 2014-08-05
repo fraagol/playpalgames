@@ -21,9 +21,9 @@ import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
 import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
 import com.playpalgames.backend.gameEndpoint.GameEndpoint;
 import com.playpalgames.backend.gameEndpoint.model.User;
+import com.playpalgames.library.GameClient;
 import com.playpalgames.library.GameController;
 
 import org.androidannotations.annotations.AfterViews;
@@ -35,14 +35,13 @@ import org.androidannotations.annotations.ViewById;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
 
 @EActivity(R.layout.activity_start)
-public class StartActivity extends ActionBarActivity implements NumberSelectionDialogFragment.NumberDialogListener {
+public class StartActivity extends ActionBarActivity implements GameClient, NumberSelectionDialogFragment.NumberDialogListener {
 
     public static final String EXTRA_MESSAGE = "message";
     public static final String DISPLAY_MESSAGE_ACTION ="com.playpalgames.app.DISPLAY_MESSAGE_ACTION";
@@ -67,15 +66,15 @@ public class StartActivity extends ActionBarActivity implements NumberSelectionD
     /**
      * Tag used on log messages.
      */
-    static final String TAG = "GCM Demo";
+    static final String TAG = "PLAYPAL";
 
     private GcmRegistrer gcmRegistrer;
-
-
 
     Context context;
 
     GameController gameController;
+
+    String pendingCommand=null;
 
 
     @ViewById(R.id.serverCheckbox)
@@ -87,8 +86,6 @@ public class StartActivity extends ActionBarActivity implements NumberSelectionD
 
     SharedPreferences preferences;
 
-
-    String[]numbersStringArray;
     private String userName;
     private List<User> users;
 
@@ -114,20 +111,21 @@ public class StartActivity extends ActionBarActivity implements NumberSelectionD
         context = getApplicationContext();
         registerReceiver(mHandleMessageReceiver,
                 new IntentFilter(DISPLAY_MESSAGE_ACTION));
-        registerReceiver(mHandleTurnReceiver,
-                new IntentFilter(TURN_ACTION));
 
         initPreferences();
-        initGcm();
+
        Bundle extras= getIntent().getExtras();
         if(extras!=null) {
-           String[] command = extras.getStringArray("COMMAND");
-            log(Arrays.deepToString(command));
+           String command = extras.getString("COMMAND");
+            log(command);
             if (command != null) {
-                log("processing from onCreate");
-                processReceivedCommand(command);
+                pendingCommand=command;
+                log("Keeping pending Command");
+
+
             }
         }
+        initGcm();
 
     }
 
@@ -137,14 +135,19 @@ public class StartActivity extends ActionBarActivity implements NumberSelectionD
         foreground=true;
         Bundle extras = intent.getExtras();
         log("on new intent");
-        if(extras != null){
-            String[] command = extras.getStringArray("COMMAND");
-            log(Arrays.deepToString(command));
+        if(extras!=null) {
+            String command = extras.getString("COMMAND");
+            log(command);
             if (command != null) {
                 log("processing from onNewIntent");
-                processReceivedCommand(command);
-            }
+                try {
+                    gameController.processCommand(command);
+                } catch (IOException e) {
+                    log(e.getMessage());
+                    e.printStackTrace();
+                }
 
+            }
         }
 
 
@@ -155,7 +158,7 @@ public class StartActivity extends ActionBarActivity implements NumberSelectionD
         super.onDestroy();
         foreground=false;
         unregisterReceiver(mHandleMessageReceiver);
-        unregisterReceiver(mHandleTurnReceiver);
+        //unregisterReceiver(mHandleTurnReceiver);
     }
     @Override
     protected void onPause(){
@@ -251,10 +254,18 @@ public class StartActivity extends ActionBarActivity implements NumberSelectionD
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-
-            return true;
+        switch (id){
+            case  R.id.action_settings:
+                return true;
+            case R.id.action_registerGCM:
+                initGcm();
+                return true;
+            case R.id.action_unregisterGCM:
+                unregister();
+                return true;
         }
+
+
         return super.onOptionsItemSelected(item);
     }
 
@@ -302,15 +313,13 @@ private boolean isRegistered(){
     private void sendRegistrationIdToBackend() {
         try {
             log("Connecting to backend");
-            PhoneNumberUtil s;
             User user= new User();
             user.setName(userName);
             user.setRegId(gcmRegistrer.getRegistrationId());
             user.setPhoneNumber(Utils.getPhoneNumber(this));
-            gameController= GameController.createGameController(AndroidHttp.newCompatibleTransport(), new JacksonFactory(), user, isLocalServer());
+            gameController= GameController.createGameController(AndroidHttp.newCompatibleTransport(), new JacksonFactory(), user, this, isLocalServer());
             log("Connected");
-
-
+            afterInitBackgroundProcess();
 
         } catch (IOException e) {
             log(e.getMessage());
@@ -320,7 +329,19 @@ private boolean isRegistered(){
 
     }
 
-
+    @UiThread
+    public void afterInitBackgroundProcess(){
+        if(pendingCommand!=null) {
+            log("Processing pending command");
+            try {
+                gameController.processCommand(pendingCommand);
+            } catch (IOException e) {
+                log(e.getMessage());
+                e.printStackTrace();
+            }
+            pendingCommand=null;
+        }
+    }
 
     private void sendUnregistrationIdToBackend(String removedId) {
         GameEndpoint.Builder reg = new GameEndpoint.Builder(AndroidHttp.newCompatibleTransport(), new JacksonFactory(), null)
@@ -408,32 +429,26 @@ private void setBuilderToLocalServer(com.google.api.client.googleapis.services.j
             new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
-                    processReceivedCommand( intent.getExtras().getStringArray("COMMAND"));
+                    try {
+                        gameController.processCommand(intent.getExtras().getString("COMMAND"));
+                    } catch (IOException e) {
+                        log(e.getMessage());
+                        e.printStackTrace();
+                    }
 
                 }
             };
 
-    private final BroadcastReceiver mHandleTurnReceiver =
-            new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-                    gameController.addTurn(intent.getExtras().getStringArray("COMMAND"));
+//    private final BroadcastReceiver mHandleTurnReceiver =
+//            new BroadcastReceiver() {
+//                @Override
+//                public void onReceive(Context context, Intent intent) {
+//                    gameController.addTurn(intent.getExtras().getStringArray("COMMAND"));
+//
+//                }
+//            };
 
-                }
-            };
 
-    private void processReceivedCommand(String[] command){
-        switch (command[0].charAt(0)){
-            case 'A'://challenge Accepted
-                startGame();
-                break;
-            case 'C': //Challenge received
-                showChallengeDialog(command[1],command[2]);
-                break;
-        }
-        //Toast.makeText(context,newMessage, Toast.LENGTH_LONG).show();
-
-    }
 
     @Background
  void acceptChallenge(String idMatch, String challengerName){
@@ -448,7 +463,7 @@ private void setBuilderToLocalServer(com.google.api.client.googleapis.services.j
         }
 }
     @Background
-    void startGame(){
+    public void challengeAccepted(){
         log("Desafío aceptado!");
         try {
             gameCountdown();
@@ -471,7 +486,7 @@ private void setBuilderToLocalServer(com.google.api.client.googleapis.services.j
 
 
 
-    private void showChallengeDialog(final String challengerName, final String matchId){
+    public void incomingChallenge(final String challengerName, final String matchId){
         AlertDialog.Builder builder = new AlertDialog.Builder(StartActivity.this);
 
         builder.setTitle("Nuevo desafío");

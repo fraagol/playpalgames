@@ -79,6 +79,7 @@ private static String LOCK="LOCK";
         User user= getById(userId,User.class);
         match.getPlayers().add(user);
         saveMatch(match);
+        //Send accepted to Match Creator
         sendMessage("A "+matchId,findUserById(match.getUserId()).getRegId());
         return match;
     }
@@ -113,7 +114,7 @@ private static String LOCK="LOCK";
         //PhoneNumberUtil phoneUtil = PhoneNumberUtil.getInstance();
 
 
-        deleteByPhoneNumber(user.getPhoneNumber());
+       // deleteByPhoneNumber(user.getPhoneNumber());
         ofy().save().entity(user).now();
         LOG.info(user.toString());
         return user;
@@ -223,7 +224,6 @@ private static String LOCK="LOCK";
     private User findUserByRegId(String regId) {
         return ofy().load().type(User.class).filter("regId", regId).first().now();
     }
-
 
     /**
      * Delete existing users with same phone number
