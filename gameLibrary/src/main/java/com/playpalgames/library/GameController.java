@@ -28,6 +28,26 @@ public class GameController {
     private Turn turn=null;
     private long lastProcessedTurnId=-1;
 
+    public boolean isMyTurn() {
+        return isMyTurn;
+    }
+
+    public void setMyTurn(boolean isMyTurn) {
+        this.isMyTurn = isMyTurn;
+    }
+
+    private boolean isMyTurn=false;
+
+    public boolean isHost() {
+        return host;
+    }
+
+    public void setHost(boolean host) {
+        this.host = host;
+    }
+
+    private boolean host=false;
+
     private LinkedList<Turn> availablesTurns=null;
 
     public static GameController createGameController(HttpTransport httpTransport, JsonFactory jsonFactory, User userP, GameClient gameClient, boolean localServer) throws IOException{
@@ -76,17 +96,21 @@ public class GameController {
                 gameClient.incomingChallenge(command[1], command[2]);
                 break;
             case 'T'://Turns availables
-               getTurns();
+                getTurnsFromServer();
                 break;
         }
         }
 
-    public void getTurns() throws IOException {
+    public void getTurnsFromServer() throws IOException {
         List<Turn> turns= gameEndpoint.listTurnsFrom(getMatchId(),lastProcessedTurnId).execute().getItems();
         for (int i = turns.size()-1; i >0; i--) {
                 availablesTurns.add(turns.get(i));
         }
 
+    }
+
+    public <T> T getNextTurn(){
+        return (T) availablesTurns.pop().getTurnData();
     }
 
     public Match createMatch() throws IOException {
