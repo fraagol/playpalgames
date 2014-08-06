@@ -24,7 +24,7 @@ public class MyGdxGame implements ApplicationListener{
 
         //TODO: set up game(cowboys position, first player to move...) according to player's role: host or guest
         boolean amIHost= gameController.isHost();
-        isMyTurn=true;
+       
 	}
 
     @Override
