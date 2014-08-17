@@ -5,7 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Array;
-import com.testapps.testLibGDX.buttons.ButtonController;
+import com.testapps.testLibGDX.buttons.GameButtons;
 import com.testapps.testLibGDX.characters.cowboy.Cowboy;
 import com.testapps.testLibGDX.characters.cowboy.CowboysBand;
 import com.testapps.testLibGDX.gameStates.IGameStates;
@@ -13,13 +13,13 @@ import com.testapps.testLibGDX.gameStates.IGameStates;
 import java.util.HashMap;
 
 public class SelectShootState implements IGameStates{
-    ButtonController buttonController;
+    GameButtons gameButtons;
     HashMap<Integer, SelectorButtonShoot> selectorsButtons;
     Array<SelectorButtonShoot> nextPossibleShoots;
     CowboysBand band;
 
-    public SelectShootState(ButtonController buttonController, CowboysBand band) {
-        this.buttonController = buttonController;
+    public SelectShootState(GameButtons gameButtons, CowboysBand band) {
+        this.gameButtons = gameButtons;
         createSelectorButtons();
         this.band = band;
     }
@@ -32,13 +32,13 @@ public class SelectShootState implements IGameStates{
         {
             SelectorButtonShoot bttn = new SelectorButtonShoot(selector, i, this);
             selectorsButtons.put(i, bttn);
-            this.buttonController.subscribeButton(bttn);
+            this.gameButtons.subscribeButton(bttn);
         }
     }
 
     @Override
     public void init() {
-        this.buttonController.hideMenuButtons();
+        this.gameButtons.hideMenuButtons();
         this.nextPossibleShoots = calculateNextShootingPositions();
         for(SelectorButtonShoot bttn : nextPossibleShoots)
         {
@@ -78,7 +78,7 @@ public class SelectShootState implements IGameStates{
         this.band.getMyCowboy().shootTo(selectorButtonShoot.getBoardPos());
 
         //TODO: more than one enemy
-        this.band.getEnemies().get(0).die();
+        this.band.getEnemies().get(0).shooted();
         //battleFieldController.buttonPressed(selector);
         for(SelectorButtonShoot bttn : nextPossibleShoots)
         {

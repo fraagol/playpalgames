@@ -4,12 +4,13 @@ package com.testapps.testLibGDX;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.testapps.testLibGDX.buttons.ActionMoveButton;
 import com.testapps.testLibGDX.buttons.ActionShootButton;
-import com.testapps.testLibGDX.buttons.ButtonController;
+import com.testapps.testLibGDX.buttons.GameButtons;
 import com.testapps.testLibGDX.buttons.IActionButton;
 import com.testapps.testLibGDX.buttons.IButtonsSubscribed;
 import com.testapps.testLibGDX.characters.cowboy.Cowboy;
 import com.testapps.testLibGDX.characters.cowboy.CowboyFactory;
 import com.testapps.testLibGDX.characters.cowboy.CowboysBand;
+import com.testapps.testLibGDX.gameGUI.Lifes;
 import com.testapps.testLibGDX.gameStates.InitGameState;
 import com.testapps.testLibGDX.gameStates.IGameStates;
 import com.testapps.testLibGDX.gameStates.MainState;
@@ -20,18 +21,20 @@ import com.testapps.testLibGDX.gameStates.selectShootState.SelectShootState;
 public class BattleFieldController {
     CowboyFactory cowboyFactory;
     CowboysBand cowboysBand;
-    ButtonController buttonController;
+    GameButtons gameButtons;
 
     private IGameStates state;
     private InitGameState initGameState;
     private MainState mainState;
     private SelectPositionState selectPositionState;
     private SelectShootState selectShootState;
+    private Lifes lifes;
 
     public BattleFieldController() {
         cowboyFactory = new CowboyFactory();
         cowboysBand = new CowboysBand();
-        buttonController = new ButtonController(this);
+        gameButtons = new GameButtons(this);
+        lifes = new Lifes();
     }
 
     public void create() {
@@ -40,9 +43,9 @@ public class BattleFieldController {
         GameBoard.initBoard(this.cowboysBand);
 
         initGameState = new InitGameState(cowboysBand);
-        mainState = new MainState(this.buttonController);
-        selectPositionState = new SelectPositionState(this, buttonController, cowboysBand);
-        selectShootState = new SelectShootState(buttonController, cowboysBand);
+        mainState = new MainState(this.gameButtons);
+        selectPositionState = new SelectPositionState(this, gameButtons, cowboysBand);
+        selectShootState = new SelectShootState(gameButtons, cowboysBand);
 
 
         initGameState.init();
@@ -59,7 +62,8 @@ public class BattleFieldController {
     public void render(SpriteBatch batch, float elapsedTime) {
         state.render(batch);
         cowboysBand.render(batch);
-        buttonController.render(batch);
+        gameButtons.render(batch);
+        lifes.render(batch);
     }
 
     public void buttonPressed(IActionButton actionBttn) {
@@ -90,6 +94,6 @@ public class BattleFieldController {
 
         cowboyFactory.dispose();
         cowboysBand.dispose();
-        buttonController.dispose();
+        gameButtons.dispose();
     }
 }
