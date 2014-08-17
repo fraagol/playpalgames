@@ -12,7 +12,7 @@ buildscript {
 }
 
 android {
-    buildToolsVersion "19.1.0"
+    buildToolsVersion '19.1.0'
     compileSdkVersion 19
     sourceSets {
         main {
@@ -31,15 +31,17 @@ android {
 configurations { natives }
 
 dependencies {
-    compile project(":core")
+    compile project(':core')
     compile "com.badlogicgames.gdx:gdx-backend-android:$gdxVersion"
+    compile "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-desktop"
+    compile "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-desktop"
     natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi"
     natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi-v7a"
     natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86"
-    compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
     natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-armeabi"
     natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-armeabi-v7a"
     natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86"
+    compile project(':gameLibrary')
 }
 
 
@@ -52,7 +54,7 @@ tasks.withType(com.android.build.gradle.tasks.PackageApplication) { pkgTask ->
 // called every time gradle gets executed, takes the native dependencies of
 // the natives configuration, and extracts them to the proper libs/ folders
 // so they get packed with the APK.
-task copyAndroidNatives() { 
+task copyAndroidNatives() {
     file("libs/armeabi/").mkdirs();
     file("libs/armeabi-v7a/").mkdirs();
     file("libs/x86/").mkdirs();

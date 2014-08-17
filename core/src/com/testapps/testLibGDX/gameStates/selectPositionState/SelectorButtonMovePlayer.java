@@ -22,6 +22,7 @@ public class SelectorButtonMovePlayer implements IButtonsSubscribed {
         this.boardPos = boardPos;
         this.state = state;
         enabled = false;
+
     }
 
     public void render(SpriteBatch batch) {

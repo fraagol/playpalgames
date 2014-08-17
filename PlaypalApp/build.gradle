@@ -18,7 +18,8 @@ buildscript {
 
 android {
     compileSdkVersion 19
-    buildToolsVersion "19.1.0"
+    buildToolsVersion '19.1.0'
+
 
     defaultConfig {
         minSdkVersion 9
@@ -42,25 +43,65 @@ apt {
     }
 }
 
+configurations { natives }
+
 dependencies {
-    apt "org.androidannotations:androidannotations:3.0+"          // add these
-    compile "org.androidannotations:androidannotations-api:3.0+"  // two lines
+    apt "org.androidannotations:androidannotations:3.0+"
+    // add these
+    // two lines
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile 'com.android.support:appcompat-v7:19.1.0'
-    compile "com.google.android.gms:play-services:3.1.+"
-    compile 'com.googlecode.libphonenumber:libphonenumber:6.1'
-    compile ('com.google.http-client:google-http-client-android:1.18.0-rc') {
-        exclude (group: 'com.google.android', module: 'android')
-        exclude (group: 'org.apache.httpcomponents', module: 'httpclient')
-    }
-    compile ('com.playpalgames.backend:registration:v1-1.18.0-rc-SNAPSHOT') {
-              exclude (group: 'org.apache.httpcomponents', module: 'httpclient')
-              }
-    compile ('com.playpalgames.backend:messaging:v1-1.18.0-rc-SNAPSHOT') {
-        exclude (group: 'org.apache.httpcomponents', module: 'httpclient')
-    }
-    compile ('com.playpalgames.game:gameEndpoint:v1-1.18.0-rc-SNAPSHOT') {
-        exclude (group: 'org.apache.httpcomponents', module: 'httpclient')
+    compile('com.google.http-client:google-http-client-android:1.18.0-rc') {
+        exclude(group: 'com.google.android', module: 'android')
+        exclude(group: 'org.apache.httpcomponents', module: 'httpclient')
     }
 
+    compile project(':core')
+    compile "com.badlogicgames.gdx:gdx-backend-android:$gdxVersion"
+    natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi"
+    natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi-v7a"
+    natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86"
+    compile "com.badlogicgames.gdx:gdx-box2d:$gdxVersion"
+    natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-armeabi"
+    natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-armeabi-v7a"
+    natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86"
+    compile project(':gameLibrary')
+    compile 'org.androidannotations:androidannotations-api:3.0.+'
+    compile 'com.android.support:appcompat-v7:19.1.0'
+    compile 'com.google.android.gms:play-services:3.1.+'
+    compile 'com.googlecode.libphonenumber:libphonenumber:6.1'
+    compile 'com.google.http-client:google-http-client-jackson2:1.19.0'
+}
+
+// needed to add JNI shared libraries to APK when compiling on CLI
+tasks.withType(com.android.build.gradle.tasks.PackageApplication) { pkgTask ->
+    pkgTask.jniFolders = new HashSet<File>()
+    pkgTask.jniFolders.add(new File(projectDir, 'libs'))
+}
+
+// called every time gradle gets executed, takes the native dependencies of
+// the natives configuration, and extracts them to the proper libs/ folders
+// so they get packed with the APK.
+task copyAndroidNatives() {
+    file("libs/armeabi/").mkdirs();
+    file("libs/armeabi-v7a/").mkdirs();
+    file("libs/x86/").mkdirs();
+
+    configurations.natives.files.each { jar ->
+        def outputDir = null
+        if (jar.name.endsWith("natives-armeabi-v7a.jar")) outputDir = file("libs/armeabi-v7a")
+        if (jar.name.endsWith("natives-armeabi.jar")) outputDir = file("libs/armeabi")
+        if (jar.name.endsWith("natives-x86.jar")) outputDir = file("libs/x86")
+        if (outputDir != null) {
+            copy {
+                from zipTree(jar)
+                into outputDir
+                include "*.so"
+            }
+        }
+    }
+}
+
+task run(type: Exec) {
+    def adb = "$System.env.ANDROID_HOME/platform-tools/adb"
+    commandLine "$adb", 'shell', 'am', 'start', '-n', 'com.testapps.testLibGDX.android/com.testapps.testLibGDX.android.AndroidLauncher'
 }

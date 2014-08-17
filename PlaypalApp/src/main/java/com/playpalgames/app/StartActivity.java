@@ -1,27 +1,30 @@
 package com.playpalgames.app;
 
+import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBarActivity;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
-import com.google.api.client.extensions.android.json.AndroidJsonFactory;
 import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
 import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
-import com.google.i18n.phonenumbers.PhoneNumberUtil;
-import com.playpalgames.backend.messaging.Messaging;
-import com.playpalgames.backend.registration.Registration;
-import com.playpalgames.backend.registration.model.User;
-import com.playpalgames.game.gameEndpoint.GameEndpoint;
-import com.playpalgames.game.gameEndpoint.model.Turn;
+import com.google.api.client.json.jackson2.JacksonFactory;
+import com.playpalgames.backend.gameEndpoint.GameEndpoint;
+import com.playpalgames.backend.gameEndpoint.model.User;
+import com.playpalgames.library.GameClient;
+import com.playpalgames.library.GameController;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
@@ -31,17 +34,28 @@ import org.androidannotations.annotations.UiThread;
 import org.androidannotations.annotations.ViewById;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.atomic.AtomicInteger;
+
 
 @EActivity(R.layout.activity_start)
-public class StartActivity extends ActionBarActivity implements NumberSelectionDialogFragment.NumberDialogListener {
+public class StartActivity extends ActionBarActivity implements GameClient, NumberSelectionDialogFragment.NumberDialogListener {
 
     public static final String EXTRA_MESSAGE = "message";
+    public static final String DISPLAY_MESSAGE_ACTION ="com.playpalgames.app.DISPLAY_MESSAGE_ACTION";
+    public static final String TURN_ACTION ="com.playpalgames.app.TURN_ACTION";
+
+    private static boolean foreground=false;
+
+    public static boolean isForeground(){
+        return foreground;
+    }
 
     public static final String PREFERENCE_LOCAL_SERVER="LOCAL_SERVER";
     public static final String  PREFERENCE_USER_NAME="USER_NAME";
+    SimpleDateFormat sdfDate = new SimpleDateFormat("HH:mm:ss");//dd/MM/yyyy
     /**
      * Substitute you own sender ID here. This is the project number you got
      * from the API Console, as described in "Getting Started."
@@ -52,23 +66,19 @@ public class StartActivity extends ActionBarActivity implements NumberSelectionD
     /**
      * Tag used on log messages.
      */
-    static final String TAG = "GCM Demo";
+    static final String TAG = "PLAYPAL";
 
     private GcmRegistrer gcmRegistrer;
 
-    TextView mDisplay;
-
-    AtomicInteger msgId = new AtomicInteger();
     Context context;
 
-    @ViewById(R.id.button1)
-    Button button1;
+    GameController gameController;
+
+    String pendingCommand=null;
+
 
     @ViewById(R.id.serverCheckbox)
     CheckBox serverCheckBox;
-
-    @ViewById(R.id.textView)
-    TextView text;
 
     @ViewById(R.id.logTextView)
     TextView logTextView;
@@ -76,12 +86,15 @@ public class StartActivity extends ActionBarActivity implements NumberSelectionD
 
     SharedPreferences preferences;
 
-    List<User> list;
-    String[]numbersStringArray;
     private String userName;
+    private List<User> users;
 
     @UiThread
     void log(String msg) {
+
+        Date now = new Date();
+        String strDate = sdfDate.format(now);
+        msg= strDate+" "+msg;
         Log.e("###########@", msg);
         auxLog += msg + "\n";
         if (logTextView != null) {
@@ -94,13 +107,66 @@ public class StartActivity extends ActionBarActivity implements NumberSelectionD
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        foreground=true;
         context = getApplicationContext();
+        registerReceiver(mHandleMessageReceiver,
+                new IntentFilter(DISPLAY_MESSAGE_ACTION));
+
         initPreferences();
 
+       Bundle extras= getIntent().getExtras();
+        if(extras!=null) {
+           String command = extras.getString("COMMAND");
+            log(command);
+            if (command != null) {
+                pendingCommand=command;
+                log("Keeping pending Command");
 
+
+            }
+        }
         initGcm();
 
     }
+
+    @Override
+    public void onNewIntent(Intent intent){
+        super.onNewIntent(intent);
+        foreground=true;
+        Bundle extras = intent.getExtras();
+        log("on new intent");
+        if(extras!=null) {
+            String command = extras.getString("COMMAND");
+            log(command);
+            if (command != null) {
+                log("processing from onNewIntent");
+                try {
+                    gameController.processCommand(command);
+                } catch (IOException e) {
+                    log(e.getMessage());
+                    e.printStackTrace();
+                }
+
+            }
+        }
+
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        foreground=false;
+        unregisterReceiver(mHandleMessageReceiver);
+        //unregisterReceiver(mHandleTurnReceiver);
+    }
+    @Override
+    protected void onPause(){
+        super.onPause();
+        foreground=false;
+    }
+
+
 
     private void initPreferences() {
         preferences= getSharedPreferences(StartActivity.class.getSimpleName(), Context.MODE_PRIVATE);
@@ -118,7 +184,7 @@ public class StartActivity extends ActionBarActivity implements NumberSelectionD
     @AfterViews
     void afterViews(){
        populateFieldsFromPreferences();
-        sendTurnToBackend();
+        logTextView.setMovementMethod(new ScrollingMovementMethod());
     }
 
     void populateFieldsFromPreferences(){
@@ -151,6 +217,7 @@ public class StartActivity extends ActionBarActivity implements NumberSelectionD
     @Override
     protected void onResume() {
         super.onResume();
+        foreground=true;
 
     }
 
@@ -187,38 +254,22 @@ public class StartActivity extends ActionBarActivity implements NumberSelectionD
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        if (id == R.id.action_settings) {
-
-            return true;
+        switch (id){
+            case  R.id.action_settings:
+                return true;
+            case R.id.action_registerGCM:
+                initGcm();
+                return true;
+            case R.id.action_unregisterGCM:
+                unregister();
+                return true;
         }
+
+
         return super.onOptionsItemSelected(item);
     }
 
 
-    @Click
-    void button1() {
-        unregister();
-    }
-
-    @Click
-    void pingButton(){
-
-        FragmentManager fm = getSupportFragmentManager();
-        NumberSelectionDialogFragment numberSelectionDialogFragment = new NumberSelectionDialogFragment(numbersStringArray);
-        numberSelectionDialogFragment.show(fm, "fragment_select_number");
-    }
-
-
-    @Click
-    void buttonRegister() {
-        if (isRegistered()) {
-            log("Already Registered");
-
-        } else {
-            log("REGISTERING");
-            initGcm();
-            }
-    }
 
 
 private boolean isRegistered(){
@@ -257,36 +308,18 @@ private boolean isRegistered(){
 
     /**
      * Sends the registration ID to your server over HTTP, so it can use GCM/HTTP or CCS to send
-     * messages to your app. Not needed for this demo since the device sends upstream messages
-     * to a server that echoes back the message using the 'from' address in the message.
+     * messages to your app.
      */
     private void sendRegistrationIdToBackend() {
-        Registration.Builder reg = new Registration.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null)
-                       ;
-
-        if (isLocalServer()){
-            setBuilderToLocalServer(reg);
-        }
-        Registration registration = reg.build();
         try {
-            log("sending to backend");
-            PhoneNumberUtil s;
+            log("Connecting to backend");
             User user= new User();
             user.setName(userName);
             user.setRegId(gcmRegistrer.getRegistrationId());
             user.setPhoneNumber(Utils.getPhoneNumber(this));
-
-            registration.register(user).execute();
-         list=  registration.listDevices().execute().getItems();
-            numbersStringArray= new String[list.size()];
-            for (int i=0; i<list.size();i++) {
-                log("user " + i + " : " + list.get(i).getName());
-                numbersStringArray[i]=list.get(i).getPhoneNumber();
-            }
-            log("sent to backend");
-
-
-
+            gameController= GameController.createGameController(AndroidHttp.newCompatibleTransport(), new JacksonFactory(), user, this, isLocalServer());
+            log("Connected");
+            afterInitBackgroundProcess();
 
         } catch (IOException e) {
             log(e.getMessage());
@@ -296,37 +329,29 @@ private boolean isRegistered(){
 
     }
 
-    @Background
-    public void sendTurnToBackend(){
-        GameEndpoint.Builder builder= new GameEndpoint.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null);
-        if (isLocalServer()){
-            setBuilderToLocalServer(builder);
+    @UiThread
+    public void afterInitBackgroundProcess(){
+        if(pendingCommand!=null) {
+            log("Processing pending command");
+            try {
+                gameController.processCommand(pendingCommand);
+            } catch (IOException e) {
+                log(e.getMessage());
+                e.printStackTrace();
+            }
+            pendingCommand=null;
         }
-        GameEndpoint turnEndpoint=builder.build();
-        log("Sending test turn");
-        Turn turn = new Turn();
-        turn.setPlayerId(223l);
-        turn.setTurnData(new Integer(343434));
-       try{
-        turnEndpoint.insertTurn(turn).execute();
-           log("turn sent");
-    } catch (IOException e) {
-        log(e.getMessage());
-
-        e.printStackTrace();
     }
-    }
-
 
     private void sendUnregistrationIdToBackend(String removedId) {
-        Registration.Builder reg = new Registration.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null)
+        GameEndpoint.Builder reg = new GameEndpoint.Builder(AndroidHttp.newCompatibleTransport(), new JacksonFactory(), null)
 
                 ;
         if (isLocalServer()){
             setBuilderToLocalServer(reg);
         }
 
-        Registration registration = reg.build();
+        GameEndpoint registration = reg.build();
         try {
             log("sending unregistration to backend");
             registration.unregister(removedId).execute();
@@ -340,33 +365,14 @@ private boolean isRegistered(){
     }
 
 
-    
+
     @Override
     @Background
-    public void onNumberPicked(String number) {
-        Messaging.Builder builder = new  Messaging.Builder(AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null)
-                // options for running against local devappserver
-                // - 10.0.2.2 is localhost's IP address in Android emulator
-                // - turn off compression when running against local devappserver
+    public void onNumberPicked(int index) {
 
-//                .setRootUrl("http://10.0.2.2:8080/_ah/api/")
-//                .setGoogleClientRequestInitializer(new GoogleClientRequestInitializer() {
-//                                                       @Override
-//                                                       public void initialize(AbstractGoogleClientRequest<?> abstractGoogleClientRequest) throws IOException {
-//                                                           abstractGoogleClientRequest.setDisableGZipContent(true);
-//                                                       }
-//                                                   }
-//                )
-//
-                ;
-
-  if (isLocalServer()){
-      setBuilderToLocalServer(builder);
-  }
-        Messaging messaging=builder.build();
         try{
-
-        messaging.sendPing(number, "minumero").execute();
+            log("Sending invitation to match "+gameController.getMatchId()+" to user "+ users.get(index).getName());
+        gameController.sendInvitation(users.get(index));
         } catch (IOException e) {
             log(e.getMessage());
 
@@ -385,4 +391,122 @@ private void setBuilderToLocalServer(com.google.api.client.googleapis.services.j
                                                    }
                 );
 }
+
+@Background
+    @Click
+    void createGameButton(){
+        try {
+            log("creating match");
+            gameController.createMatch();
+            log("created match");
+        users = gameController.listUsers();
+            log("users retrieved");
+       String[] userNames= new String[users.size()];
+        for (int i=0; i< users.size();i++) {
+            log("user " + i + " : " + users.get(i).getName());
+            userNames[i]= users.get(i).getName();
+            //numbersStringArray[i]=list.get(i).getPhoneNumber();
+        }
+
+        FragmentManager fm = getSupportFragmentManager();
+        NumberSelectionDialogFragment numberSelectionDialogFragment = new NumberSelectionDialogFragment(userNames);
+        numberSelectionDialogFragment.show(fm, "fragment_select_number");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Click(R.id.launchButton)
+    void startGameActivity(){
+        Intent myIntent = new Intent(StartActivity.this, AndroidLauncher.class);
+
+        startActivity(myIntent);
+
+    }
+
+    private final BroadcastReceiver mHandleMessageReceiver =
+            new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    try {
+                        gameController.processCommand(intent.getExtras().getString("COMMAND"));
+                    } catch (IOException e) {
+                        log(e.getMessage());
+                        e.printStackTrace();
+                    }
+
+                }
+            };
+
+//    private final BroadcastReceiver mHandleTurnReceiver =
+//            new BroadcastReceiver() {
+//                @Override
+//                public void onReceive(Context context, Intent intent) {
+//                    gameController.addTurn(intent.getExtras().getStringArray("COMMAND"));
+//
+//                }
+//            };
+
+
+
+    @Background
+ void acceptChallenge(String idMatch, String challengerName){
+        log("Has aceptado el desafío!");
+        try {
+        gameController.acceptChallenge(idMatch);
+        gameCountdown();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            log(e.getMessage());
+        }
+}
+    @Background
+    public void challengeAccepted(){
+        log("Desafío aceptado!");
+        try {
+            gameCountdown();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+            log(e.getMessage());
+        }
+    }
+
+    void gameCountdown() throws InterruptedException {
+
+        log("el juego comenzará en... ");
+        for (int i=5;i>=0;i--){
+            Thread.sleep(1000);
+            log(i+"");
+        }
+        startGameActivity();
+    }
+
+
+
+
+    public void incomingChallenge(final String challengerName, final String matchId){
+        AlertDialog.Builder builder = new AlertDialog.Builder(StartActivity.this);
+
+        builder.setTitle("Nuevo desafío");
+        builder.setMessage(challengerName+ " te desafía a un duelo ¿aceptas?");
+        builder.setPositiveButton("Sí", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                acceptChallenge(matchId,challengerName);
+            }
+        });
+
+        builder.setNegativeButton("poo-poo-pooo", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+
+        AlertDialog alert = builder.create();
+        alert.show();
+    }
+
 }

@@ -1,7 +1,10 @@
-package com.playpalgames.game;
+package com.playpalgames.backend;
 
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by javi on 08/07/2014.
@@ -14,7 +17,13 @@ public class Match {
     @Id
     Long id;
 
+    Long userId;
+
     Integer status;
+
+    List<User> players = new ArrayList<User>();
+
+
 
     public Match() {
         status=STATUS_CREATED;
@@ -38,6 +47,23 @@ public class Match {
 
     public void setStatus(Integer status) {
         this.status = status;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
+
+    public List<User> getPlayers() {
+
+        return players;
+    }
+
+    public void setPlayers(List<User> players) {
+        this.players = players;
     }
 
     @Override

@@ -15,7 +15,7 @@ public class NumberSelectionDialogFragment extends DialogFragment {
 
 
     public interface NumberDialogListener{
-        public void onNumberPicked(String number);
+        public void onNumberPicked(int id);
     }
 
     NumberDialogListener activityListener;
@@ -50,7 +50,7 @@ public class NumberSelectionDialogFragment extends DialogFragment {
         builder.setTitle(R.string.pick_number)
                 .setItems(numbersStringArray, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
-                        activityListener.onNumberPicked(numbersStringArray[which]);
+                        activityListener.onNumberPicked(which);
 
                     }
                 });
