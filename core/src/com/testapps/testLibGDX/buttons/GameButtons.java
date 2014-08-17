@@ -9,12 +9,12 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.testapps.testLibGDX.BattleFieldController;
 
-public class ButtonController implements InputProcessor{
+public class GameButtons implements InputProcessor{
     Array<IActionButton> menuButtons;
     Array<IButtonsSubscribed> subscribedButtons;
     BattleFieldController battleFieldController;
 
-    public ButtonController(BattleFieldController battleFieldController) {
+    public GameButtons(BattleFieldController battleFieldController) {
         Gdx.input.setInputProcessor(this);
 
         this.battleFieldController = battleFieldController;

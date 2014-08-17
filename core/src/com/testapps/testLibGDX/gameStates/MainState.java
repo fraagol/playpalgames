@@ -1,22 +1,22 @@
 package com.testapps.testLibGDX.gameStates;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.testapps.testLibGDX.buttons.ButtonController;
+import com.testapps.testLibGDX.buttons.GameButtons;
 
 /*
 Main Game State. Shows the basic buttons and functionality.
  */
 public class MainState implements IGameStates{
 
-    private final ButtonController buttonController;
+    private final GameButtons gameButtons;
 
-    public MainState(ButtonController buttonController) {
-        this.buttonController = buttonController;
+    public MainState(GameButtons gameButtons) {
+        this.gameButtons = gameButtons;
     }
 
     @Override
     public void init() {
-        buttonController.showMenuButtons();
+        gameButtons.showMenuButtons();
     }
 
     @Override

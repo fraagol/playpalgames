@@ -5,13 +5,14 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.testapps.testLibGDX.GameBoard;
+import com.testapps.testLibGDX.GameParams;
 import com.testapps.testLibGDX.characters.cowboy.views.CowboyView;
 
 public class Cowboy {
     private int id;
     private CowboyView view;
     private int boardPos;
-    private int numLives = 3;
+    private int numLives = GameParams.NumLives;
 
     private float time = 0;
 

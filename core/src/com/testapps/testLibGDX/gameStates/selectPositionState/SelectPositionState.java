@@ -5,22 +5,22 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Array;
 import com.testapps.testLibGDX.BattleFieldController;
-import com.testapps.testLibGDX.buttons.ButtonController;
+import com.testapps.testLibGDX.buttons.GameButtons;
 import com.testapps.testLibGDX.characters.cowboy.CowboysBand;
 import com.testapps.testLibGDX.gameStates.IGameStates;
 
 import java.util.HashMap;
 
 public class SelectPositionState implements IGameStates {
-    ButtonController buttonController;
+    GameButtons gameButtons;
     BattleFieldController battleFieldController;
     HashMap<Integer, SelectorButtonMovePlayer> selectorsButtons;
     Array<SelectorButtonMovePlayer> nextPossibleMovements;
     CowboysBand band;
 
-    public SelectPositionState(BattleFieldController battleFieldController, ButtonController buttonController, CowboysBand band) {
+    public SelectPositionState(BattleFieldController battleFieldController, GameButtons gameButtons, CowboysBand band) {
         this.battleFieldController = battleFieldController;
-        this.buttonController = buttonController;
+        this.gameButtons = gameButtons;
         this.band = band;
         createSelectorButtons();
     }
@@ -33,13 +33,13 @@ public class SelectPositionState implements IGameStates {
         {
             SelectorButtonMovePlayer bttn = new SelectorButtonMovePlayer(selector, i, this);
             selectorsButtons.put(i, bttn);
-            this.buttonController.subscribeButton(bttn);
+            this.gameButtons.subscribeButton(bttn);
         }
     }
 
     @Override
     public void init() {
-        this.buttonController.hideMenuButtons();
+        this.gameButtons.hideMenuButtons();
         this.nextPossibleMovements = calculateNextMovements();
         for(SelectorButtonMovePlayer bttn : nextPossibleMovements)
         {
