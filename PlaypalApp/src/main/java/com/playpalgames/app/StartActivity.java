@@ -23,8 +23,8 @@ import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.playpalgames.backend.gameEndpoint.GameEndpoint;
 import com.playpalgames.backend.gameEndpoint.model.User;
-import com.playpalgames.library.GameClient;
-import com.playpalgames.library.GameController;
+import com.playpalgames.library.ChallengesClient;
+import com.playpalgames.library.GameControllerImpl;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
@@ -41,7 +41,7 @@ import java.util.Random;
 
 
 @EActivity(R.layout.activity_start)
-public class StartActivity extends ActionBarActivity implements GameClient, NumberSelectionDialogFragment.NumberDialogListener {
+public class StartActivity extends ActionBarActivity implements ChallengesClient, NumberSelectionDialogFragment.NumberDialogListener {
 
     public static final String EXTRA_MESSAGE = "message";
     public static final String DISPLAY_MESSAGE_ACTION ="com.playpalgames.app.DISPLAY_MESSAGE_ACTION";
@@ -72,7 +72,7 @@ public class StartActivity extends ActionBarActivity implements GameClient, Numb
 
     Context context;
 
-    GameController gameController;
+    GameControllerImpl gameController;
 
     String pendingCommand=null;
 
@@ -317,7 +317,7 @@ private boolean isRegistered(){
             user.setName(userName);
             user.setRegId(gcmRegistrer.getRegistrationId());
             user.setPhoneNumber(Utils.getPhoneNumber(this));
-            gameController= GameController.createGameController(AndroidHttp.newCompatibleTransport(), new JacksonFactory(), user, this, isLocalServer());
+            gameController= GameControllerImpl.createGameController(AndroidHttp.newCompatibleTransport(), new JacksonFactory(), user, this, isLocalServer());
             log("Connected");
             afterInitBackgroundProcess();
 

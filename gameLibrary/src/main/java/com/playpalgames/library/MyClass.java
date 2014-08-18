@@ -15,10 +15,10 @@ public class MyClass {
        final boolean LOCAL_SERVER=true;
 
 
-        final GameController gc;
+        final GameControllerImpl gc;
         try {
 
-         gc= new GameController( new NetHttpTransport(),new GsonFactory(),new MockUserFinder(),LOCAL_SERVER);
+         gc= new GameControllerImpl( new NetHttpTransport(),new GsonFactory(),new MockUserFinder(),LOCAL_SERVER);
 
 
 

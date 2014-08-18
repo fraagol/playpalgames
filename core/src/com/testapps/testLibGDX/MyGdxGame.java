@@ -20,7 +20,7 @@ public class MyGdxGame implements ApplicationListener{
         batch = new SpriteBatch();
         this.battleField = new BattleFieldController();
         battleField.create();
-        gameController=GameController.getInstance();
+        gameController= GameController.getInstance();
 
         //TODO: set up game(cowboys position, first player to move...) according to player's role: host or guest
         boolean amIHost= gameController.isHost();
