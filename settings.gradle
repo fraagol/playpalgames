@@ -1,1 +1,1 @@
-include ':PlaypalApp', ':BackendWebapp', ':gameLibrary', ':core', ':desktop', ':android'
+include ':PlaypalApp', ':BackendWebapp', ':gameLibrary', ':core', ':desktop'
