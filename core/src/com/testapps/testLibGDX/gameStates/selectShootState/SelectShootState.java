@@ -8,6 +8,7 @@ import com.badlogic.gdx.utils.Array;
 import com.testapps.testLibGDX.buttons.GameButtons;
 import com.testapps.testLibGDX.characters.cowboy.Cowboy;
 import com.testapps.testLibGDX.characters.cowboy.CowboysBand;
+import com.testapps.testLibGDX.gameGUI.Bullets;
 import com.testapps.testLibGDX.gameStates.IGameStates;
 
 import java.util.HashMap;
@@ -17,11 +18,13 @@ public class SelectShootState implements IGameStates{
     HashMap<Integer, SelectorButtonShoot> selectorsButtons;
     Array<SelectorButtonShoot> nextPossibleShoots;
     CowboysBand band;
+    Bullets bullets;
 
-    public SelectShootState(GameButtons gameButtons, CowboysBand band) {
+    public SelectShootState(GameButtons gameButtons, CowboysBand band, Bullets bullets) {
         this.gameButtons = gameButtons;
         createSelectorButtons();
         this.band = band;
+        this.bullets = bullets;
     }
 
     private void createSelectorButtons() {
@@ -75,14 +78,16 @@ public class SelectShootState implements IGameStates{
 
 
     public void selectorPushed(SelectorButtonShoot selectorButtonShoot) {
-        this.band.getMyCowboy().shootTo(selectorButtonShoot.getBoardPos());
+        if(this.band.getMyCowboy().canShoot()) {
+            this.band.getMyCowboy().shootTo(selectorButtonShoot.getBoardPos());
+            this.bullets.shoot();
 
-        //TODO: more than one enemy
-        this.band.getEnemies().get(0).shooted();
-        //battleFieldController.buttonPressed(selector);
-        for(SelectorButtonShoot bttn : nextPossibleShoots)
-        {
-            bttn.disable();
+            //TODO: more than one enemy
+            this.band.getEnemies().get(0).shooted();
+            //battleFieldController.buttonPressed(selector);
+            for (SelectorButtonShoot bttn : nextPossibleShoots) {
+                bttn.disable();
+            }
         }
     }
 }
