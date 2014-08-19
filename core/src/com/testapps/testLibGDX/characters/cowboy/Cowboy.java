@@ -153,4 +153,8 @@ public class Cowboy {
     public boolean canShoot() {
         return this.numBullets > 0;
     }
+
+    public void rechargeGun() {
+        this.numBullets = GameParams.numBullets;
+    }
 }

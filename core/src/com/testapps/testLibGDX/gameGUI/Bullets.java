@@ -38,4 +38,7 @@ public class Bullets {
     }
 
 
+    public void recharge() {
+        setupPositions();
+    }
 }
