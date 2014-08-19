@@ -10,7 +10,8 @@ import com.testapps.testLibGDX.buttons.IButtonsSubscribed;
 import com.testapps.testLibGDX.characters.cowboy.Cowboy;
 import com.testapps.testLibGDX.characters.cowboy.CowboyFactory;
 import com.testapps.testLibGDX.characters.cowboy.CowboysBand;
-import com.testapps.testLibGDX.gameGUI.Lifes;
+import com.testapps.testLibGDX.gameGUI.Bullets;
+import com.testapps.testLibGDX.gameGUI.Lives;
 import com.testapps.testLibGDX.gameStates.InitGameState;
 import com.testapps.testLibGDX.gameStates.IGameStates;
 import com.testapps.testLibGDX.gameStates.MainState;
@@ -28,13 +29,15 @@ public class BattleFieldController {
     private MainState mainState;
     private SelectPositionState selectPositionState;
     private SelectShootState selectShootState;
-    private Lifes lifes;
+    private Lives lives;
+    private Bullets bullets;
 
     public BattleFieldController() {
         cowboyFactory = new CowboyFactory();
         cowboysBand = new CowboysBand();
         gameButtons = new GameButtons(this);
-        lifes = new Lifes();
+        lives = new Lives();
+        bullets = new Bullets();
     }
 
     public void create() {
@@ -45,7 +48,7 @@ public class BattleFieldController {
         initGameState = new InitGameState(cowboysBand);
         mainState = new MainState(this.gameButtons);
         selectPositionState = new SelectPositionState(this, gameButtons, cowboysBand);
-        selectShootState = new SelectShootState(gameButtons, cowboysBand);
+        selectShootState = new SelectShootState(gameButtons, cowboysBand, bullets);
 
 
         initGameState.init();
@@ -63,7 +66,8 @@ public class BattleFieldController {
         state.render(batch);
         cowboysBand.render(batch);
         gameButtons.render(batch);
-        lifes.render(batch);
+        lives.render(batch);
+        bullets.render(batch);
     }
 
     public void buttonPressed(IActionButton actionBttn) {

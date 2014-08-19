@@ -12,7 +12,8 @@ public class Cowboy {
     private int id;
     private CowboyView view;
     private int boardPos;
-    private int numLives = GameParams.NumLives;
+    private int numLives = GameParams.numLives;
+    private int numBullets = GameParams.numBullets;
 
     private float time = 0;
 
@@ -101,8 +102,11 @@ public class Cowboy {
     }
 
     public void shootTo(Integer boardPos) {
-        setShootingAnimation(boardPos);
-        this.shooting = true;
+        if(canShoot()) {
+            numBullets--;
+            setShootingAnimation(boardPos);
+            this.shooting = true;
+        }
     }
 
     public void shooted(){
@@ -146,4 +150,7 @@ public class Cowboy {
     }
 
 
+    public boolean canShoot() {
+        return this.numBullets > 0;
+    }
 }
