@@ -22,6 +22,7 @@ public class GameButtons implements InputProcessor{
         subscribedButtons = new Array<IButtonsSubscribed>();
         createMoveButton();
         createShootButton();
+        createRechargeButton();
         this.showMenuButtons();
     }
 
@@ -37,6 +38,13 @@ public class GameButtons implements InputProcessor{
         Vector3 pos = new Vector3(Gdx.graphics.getWidth() / 40 + texture.getWidth() * 2,
                 Gdx.graphics.getHeight() - (Gdx.graphics.getHeight() / 40) - texture.getHeight(), 0);
         this.menuButtons.add(new ActionShootButton(texture, pos));
+    }
+
+    private void createRechargeButton() {
+        Texture texture = new Texture(Gdx.files.internal("bullet.png"));
+        Vector3 pos = new Vector3(Gdx.graphics.getWidth() / 40 + texture.getWidth() * 4,
+                Gdx.graphics.getHeight() - (Gdx.graphics.getHeight() / 40) - texture.getHeight(), 0);
+        this.menuButtons.add(new ActionRechargeButton(texture, pos));
     }
 
     public void render(SpriteBatch batch){
