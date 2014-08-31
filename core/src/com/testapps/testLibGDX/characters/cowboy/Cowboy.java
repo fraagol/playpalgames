@@ -11,7 +11,6 @@ import com.testapps.testLibGDX.characters.cowboy.views.CowboyView;
 public class Cowboy {
     private int id;
     private CowboyView view;
-    private int boardPos;
     private int numLives = GameParams.numLives;
     private int numBullets = GameParams.numBullets;
 
@@ -60,12 +59,7 @@ public class Cowboy {
 
     public int getID() {return this.id;}
 
-    public int getBoardPos() {
-        return boardPos;
-    }
-
-    public void positionInBoard(int boardPos) {
-        this.boardPos = boardPos;
+    public void setPos(int boardPos) {
         this.view.setPos(GameBoard.getScreenPos(boardPos));
     }
 
@@ -94,7 +88,7 @@ public class Cowboy {
         {
             this.moving = false;
             this.view.stop(new CowboyOrientation(CowboyOrientation.STOP_N));
-            this.boardPos = this.moveToBoardPosition;
+            GameBoard.setCowboyPosition(this, moveToBoardPosition);
             this.moveToBoardPosition = null;
         }
 
@@ -121,7 +115,7 @@ public class Cowboy {
     }
 
     private void setShootingAnimation(Integer boardPos) {
-        Vector2 myPos = GameBoard.getScreenPos(this.boardPos);
+        Vector2 myPos = GameBoard.getScreenPos(this);
         Vector2 objectivePos = GameBoard.getScreenPos(boardPos);
         float distX = objectivePos.x - myPos.x;
         float distY = objectivePos.y - myPos.y;
@@ -145,6 +139,7 @@ public class Cowboy {
             else
             {
                 this.view.showAnimShootLeft();
+
             }
         }
     }
@@ -156,5 +151,45 @@ public class Cowboy {
 
     public void rechargeGun() {
         this.numBullets = GameParams.numBullets;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Cowboy cowboy = (Cowboy) o;
+
+        if (id != cowboy.id) return false;
+        if (moving != cowboy.moving) return false;
+        if (numBullets != cowboy.numBullets) return false;
+        if (numLives != cowboy.numLives) return false;
+        if (shooting != cowboy.shooting) return false;
+        if (Float.compare(cowboy.speed, speed) != 0) return false;
+        if (Float.compare(cowboy.time, time) != 0) return false;
+        if (currentDirection != null ? !currentDirection.equals(cowboy.currentDirection) : cowboy.currentDirection != null)
+            return false;
+        if (moveTo != null ? !moveTo.equals(cowboy.moveTo) : cowboy.moveTo != null) return false;
+        if (moveToBoardPosition != null ? !moveToBoardPosition.equals(cowboy.moveToBoardPosition) : cowboy.moveToBoardPosition != null)
+            return false;
+        if (view != null ? !view.equals(cowboy.view) : cowboy.view != null) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = id;
+        result = 31 * result + (view != null ? view.hashCode() : 0);
+        result = 31 * result + numLives;
+        result = 31 * result + numBullets;
+        result = 31 * result + (time != +0.0f ? Float.floatToIntBits(time) : 0);
+        result = 31 * result + (speed != +0.0f ? Float.floatToIntBits(speed) : 0);
+        result = 31 * result + (moving ? 1 : 0);
+        result = 31 * result + (moveTo != null ? moveTo.hashCode() : 0);
+        result = 31 * result + (moveToBoardPosition != null ? moveToBoardPosition.hashCode() : 0);
+        result = 31 * result + (currentDirection != null ? currentDirection.hashCode() : 0);
+        result = 31 * result + (shooting ? 1 : 0);
+        return result;
     }
 }
