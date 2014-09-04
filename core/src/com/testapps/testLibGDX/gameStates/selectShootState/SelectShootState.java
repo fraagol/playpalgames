@@ -50,7 +50,7 @@ public class SelectShootState implements IGameStates{
 
     @Override
     public void init() {
-        this.gameButtons.hideMenuButtons();
+        //this.gameButtons.hideMenuButtons();
         this.nextPossibleShoots = calculateNextShootingPositions();
         for(SelectorButtonShoot bttn : nextPossibleShoots)
         {
@@ -93,9 +93,11 @@ public class SelectShootState implements IGameStates{
         if(this.band.getMyCowboy().canShoot()) {
             this.band.getMyCowboy().shootTo(selectorButtonShoot.getBoardPos());
             this.bullets.shoot();
+            Cowboy objective = GameBoard.getCowboyAt(selectorButtonShoot.getBoardPos());
+            if(objective != null) {
+                objective.shooted();
+            }
 
-            //TODO: more than one enemy
-            this.band.getEnemies().get(0).shooted();
             //battleFieldController.buttonPressed(selector);
             for (SelectorButtonShoot bttn : nextPossibleShoots) {
                 bttn.disable();
