@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Array;
 import com.testapps.testLibGDX.BattleFieldController;
+import com.testapps.testLibGDX.GameBoard;
 import com.testapps.testLibGDX.buttons.GameButtons;
 import com.testapps.testLibGDX.characters.cowboy.CowboysBand;
 import com.testapps.testLibGDX.gameStates.IGameStates;
@@ -39,7 +40,7 @@ public class SelectPositionState implements IGameStates {
 
     @Override
     public void init() {
-        this.gameButtons.hideMenuButtons();
+        //this.gameButtons.hideMenuButtons();
         this.nextPossibleMovements = calculateNextMovements();
         for(SelectorButtonMovePlayer bttn : nextPossibleMovements)
         {
@@ -67,7 +68,7 @@ public class SelectPositionState implements IGameStates {
 
     private Array<SelectorButtonMovePlayer> calculateNextMovements(){
         Array<SelectorButtonMovePlayer> availablePositions = new Array<SelectorButtonMovePlayer>();
-        Integer myPlayerPos = this.band.getMyCowboy().getBoardPos();
+        Integer myPlayerPos = GameBoard.getBoardPos(this.band.getMyCowboy());
         if(myPlayerPos == 1)
         {
             availablePositions.add(this.selectorsButtons.get(2));

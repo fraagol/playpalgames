@@ -2,6 +2,7 @@ package com.testapps.testLibGDX.gameStates;
 
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.testapps.testLibGDX.GameBoard;
 import com.testapps.testLibGDX.characters.cowboy.Cowboy;
 import com.testapps.testLibGDX.characters.cowboy.CowboyOrientation;
 import com.testapps.testLibGDX.characters.cowboy.CowboysBand;
@@ -31,9 +32,11 @@ public class InitGameState implements IGameStates{
         Cowboy cowboy1 = cowboys.getCowboy(1);
         Cowboy cowboy2 = cowboys.getCowboy(2);
 
-        cowboy2.positionInBoard(1);
+        cowboy2.setPos(1);
         cowboy2.stop(new CowboyOrientation(CowboyOrientation.STOP_S));
-        cowboy1.positionInBoard(4);
+        cowboy1.setPos(4);
+        GameBoard.setCowboyPosition(cowboy1, 4);
+        GameBoard.setCowboyPosition(cowboy2, 1);
     }
 
     @Override

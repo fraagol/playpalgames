@@ -5,6 +5,7 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Array;
+import com.testapps.testLibGDX.GameBoard;
 import com.testapps.testLibGDX.buttons.GameButtons;
 import com.testapps.testLibGDX.characters.cowboy.Cowboy;
 import com.testapps.testLibGDX.characters.cowboy.CowboysBand;
@@ -22,26 +23,34 @@ public class SelectShootState implements IGameStates{
 
     public SelectShootState(GameButtons gameButtons, CowboysBand band, Bullets bullets) {
         this.gameButtons = gameButtons;
-        createSelectorButtons();
         this.band = band;
         this.bullets = bullets;
+        createSelectorButtons();
     }
 
     private void createSelectorButtons() {
         Texture selector = new Texture(Gdx.files.internal("bullseye.jpg"));
 
         selectorsButtons = new HashMap<Integer, SelectorButtonShoot>();
-        for(Integer i = 1; i <= 6; i++)
+        for(Integer gameBoardPosition = 1; gameBoardPosition <= GameBoard.numPositions(); gameBoardPosition++)
         {
-            SelectorButtonShoot bttn = new SelectorButtonShoot(selector, i, this);
-            selectorsButtons.put(i, bttn);
+            SelectorButtonShoot bttn = new SelectorButtonShoot(selector, gameBoardPosition, this);
+            selectorsButtons.put(gameBoardPosition, bttn);
             this.gameButtons.subscribeButton(bttn);
         }
     }
 
+    private Boolean itsMyPosition(int gameBoardPosition) {
+        Cowboy cowboy = GameBoard.getCowboyAt(gameBoardPosition);
+        if(cowboy == null) {
+            return Boolean.FALSE;
+        }
+        return (this.band.getMyCowboy() == cowboy);
+    }
+
     @Override
     public void init() {
-        this.gameButtons.hideMenuButtons();
+        //this.gameButtons.hideMenuButtons();
         this.nextPossibleShoots = calculateNextShootingPositions();
         for(SelectorButtonShoot bttn : nextPossibleShoots)
         {
@@ -52,10 +61,13 @@ public class SelectShootState implements IGameStates{
     private Array<SelectorButtonShoot> calculateNextShootingPositions() {
         Array<SelectorButtonShoot> availablePositions = new Array<SelectorButtonShoot>();
         Array<Cowboy> enemies = this.band.getEnemies();
-        for(Cowboy enemy : enemies)
-        {
-            availablePositions.add(this.selectorsButtons.get(enemy.getBoardPos()));
+        for (int gameBoardPositions = 1; gameBoardPositions <= GameBoard.numPositions(); gameBoardPositions++) {
+            if(itsMyPosition(gameBoardPositions)) {
+                continue;
+            }
+            availablePositions.add(this.selectorsButtons.get(gameBoardPositions));
         }
+
         return availablePositions;
     }
 
@@ -81,9 +93,11 @@ public class SelectShootState implements IGameStates{
         if(this.band.getMyCowboy().canShoot()) {
             this.band.getMyCowboy().shootTo(selectorButtonShoot.getBoardPos());
             this.bullets.shoot();
+            Cowboy objective = GameBoard.getCowboyAt(selectorButtonShoot.getBoardPos());
+            if(objective != null) {
+                objective.shooted();
+            }
 
-            //TODO: more than one enemy
-            this.band.getEnemies().get(0).shooted();
             //battleFieldController.buttonPressed(selector);
             for (SelectorButtonShoot bttn : nextPossibleShoots) {
                 bttn.disable();
