@@ -6,5 +6,10 @@
 
     <system-properties>
         <property name="java.util.logging.config.file" value="WEB-INF/logging.properties"/>
+        <property name="file.encoding" value="UTF-8" />
+        <property name="DEFAULT_ENCODING" value="UTF-8" />
     </system-properties>
+    <env-variables>
+        <env-var name="DEFAULT_ENCODING" value="UTF-8" />
+    </env-variables>
 </appengine-web-app>

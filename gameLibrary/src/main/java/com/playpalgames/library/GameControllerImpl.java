@@ -19,14 +19,15 @@ import java.util.logging.Logger;
 public class GameControllerImpl extends GameController {
     private static final Logger LOG = Logger.getLogger(GameControllerImpl.class.getName());
 
-    private static GameControllerImpl GAME_CONTROLLER;
+    private static GameController GAME_CONTROLLER;
     Match match;
     User user;
     GameEndpoint gameEndpoint;
     public String message="";
     private ChallengesClient challengesClient;
-    private Turn turn=null;
     private long lastProcessedTurnId=-1;
+
+    private GameClient gameClient=null;
 
     @Override
     public boolean isMyTurn() {
@@ -54,19 +55,12 @@ public class GameControllerImpl extends GameController {
 
     private LinkedList<Turn> availablesTurns=null;
 
-    public static GameControllerImpl createGameController(HttpTransport httpTransport, JsonFactory jsonFactory, User userP, ChallengesClient challengesClient, boolean localServer) throws IOException{
-        GAME_CONTROLLER=new GameControllerImpl(httpTransport,jsonFactory,userP, challengesClient, localServer);
-        return GAME_CONTROLLER;
-    }
 
-    public static GameControllerImpl getInstance(){
-        return GAME_CONTROLLER;
-    }
 
     public GameControllerImpl(HttpTransport httpTransport, JsonFactory jsonFactory, UserFinder finder, boolean localServer) throws IOException {
         GameEndpoint.Builder builder= new GameEndpoint.Builder(httpTransport,jsonFactory , new DisableTimeout());
         if (localServer) {
-            localServer(builder);
+            localServer(builder, "");
         }
         gameEndpoint=builder.build();
         user= finder.getUser();
@@ -74,10 +68,10 @@ public class GameControllerImpl extends GameController {
 
     }
 
-    public GameControllerImpl(HttpTransport httpTransport, JsonFactory jsonFactory, User userP, ChallengesClient challengesClient, boolean localServer) throws IOException {
+    public GameControllerImpl(HttpTransport httpTransport, JsonFactory jsonFactory, User userP, ChallengesClient challengesClient, boolean localServer, String buildString) throws IOException {
         GameEndpoint.Builder builder= new GameEndpoint.Builder(httpTransport,jsonFactory , new DisableTimeout());
         if (localServer) {
-            localServer(builder);
+            localServer(builder,buildString);
         }
         gameEndpoint=builder.build();
         user= gameEndpoint.register(userP).execute();
@@ -94,6 +88,8 @@ public class GameControllerImpl extends GameController {
 
         switch (command[0].charAt(0)){
             case 'A'://challenge Accepted
+                setHost(true);
+                setMyTurn(true);
                 initMatch();
                 challengesClient.challengeAccepted();
 
@@ -110,18 +106,24 @@ public class GameControllerImpl extends GameController {
     @Override
     public void getTurnsFromServer() throws IOException {
         List<Turn> turns= gameEndpoint.listTurnsFrom(getMatchId(),lastProcessedTurnId).execute().getItems();
-        for (int i = turns.size()-1; i >0; i--) {
-                availablesTurns.add(turns.get(i));
+        for (int i = turns.size(); i >0; i--) {
+            availablesTurns.add(turns.get(i-1));
+            lastProcessedTurnId = turns.get(i-1).getTurnNumber();
         }
-
+        if(gameClient!=null){
+            gameClient.turnAvailable();
+}
     }
 
     @Override
-    public <T> T getNextTurn(){
-
+    public <T extends GameTurn> T getNextTurn(T turnToPopulate){
+        if (availablesTurns==null){
+            return null;
+        }
         Turn t= availablesTurns.poll();
-        if(turn!=null) {
-            return (T) turn.getTurnData();
+        if(t!=null) {
+        turnToPopulate.populateFromString(t.getTurnData());
+            return turnToPopulate;
         }else
         {
             return null;
@@ -141,14 +143,16 @@ public class GameControllerImpl extends GameController {
     }
 
     @Override
-    public void sendTurn(Object o) throws IOException {
+    public <T extends GameTurn> void sendTurn(T o) throws IOException {
         Turn turn = new Turn();
         turn.setMatchId(match.getId());
         turn.setPlayerId(user.getId());
-        turn.setTurnData(o);
+        turn.setTurnData(o.dataToString());
+
 
         Turn t =  gameEndpoint.insertTurn(turn).execute();
-        log(t);
+        lastProcessedTurnId=t.getTurnNumber();
+        log("Sent turn: "+t);
     }
 
     @Override
@@ -161,15 +165,15 @@ public class GameControllerImpl extends GameController {
         return turns;
     }
 
-    @Override
-    public List<Turn> listTurnsFromNumber(Long turnNumber) throws IOException {
-        List<Turn> turns=  gameEndpoint.listTurnsFrom(match.getId(),turnNumber).execute().getItems();
-        for(Turn turnN:turns){
-
-            log(turnN);
-        }
-        return turns;
-    }
+//    @Override
+//    public List<Turn> listTurnsFromNumber(Long turnNumber) throws IOException {
+//        List<Turn> turns=  gameEndpoint.listTurnsFrom(match.getId(),turnNumber).execute().getItems();
+//        for(Turn turnN:turns){
+//
+//            log(turnN);
+//        }
+//        return turns;
+//    }
 
     @Override
     public List<User> listUsers() throws IOException {
@@ -186,6 +190,8 @@ public class GameControllerImpl extends GameController {
     @Override
     public void acceptChallenge(String matchId)throws IOException{
         match=gameEndpoint.joinMatch(user.getId(),Long.valueOf(matchId)).execute();
+        setHost(false);
+        setMyTurn(false);
         initMatch();
     }
 
@@ -196,9 +202,19 @@ public class GameControllerImpl extends GameController {
         return  match!=null? match.getId():null;
     }
 
-    private void localServer(AbstractGoogleClient.Builder builder) {
+    @Override
+    public void addGameClientListener(GameClient gameClient) {
+        this.gameClient=gameClient;
+    }
+
+    private void localServer(AbstractGoogleClient.Builder builder, String buildString) {
         //  builder.setRootUrl("http://localhost:8080/_ah/api/");
-        builder.setRootUrl("http://10.0.2.2:8080/_ah/api/");
+        if(buildString.matches(".*_?sdk_?.*")){
+            builder.setRootUrl("http://10.0.2.2:8080/_ah/api/");
+        }else{
+            builder.setRootUrl("http://192.168.1.16:8080/_ah/api/");
+        }
+
 
     }
 

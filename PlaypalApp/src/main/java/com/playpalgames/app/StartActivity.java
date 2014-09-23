@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBarActivity;
@@ -21,10 +22,11 @@ import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
 import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
 import com.google.api.client.json.jackson2.JacksonFactory;
+import com.playpalgames.app.game.GameActivity_;
 import com.playpalgames.backend.gameEndpoint.GameEndpoint;
 import com.playpalgames.backend.gameEndpoint.model.User;
 import com.playpalgames.library.ChallengesClient;
-import com.playpalgames.library.GameControllerImpl;
+import com.playpalgames.library.GameController;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
@@ -54,6 +56,7 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
     }
 
     public static final String PREFERENCE_LOCAL_SERVER="LOCAL_SERVER";
+    public static final String PREFERENCE_PENALTY_KICKS="PENALTY_KICKS";
     public static final String  PREFERENCE_USER_NAME="USER_NAME";
     SimpleDateFormat sdfDate = new SimpleDateFormat("HH:mm:ss");//dd/MM/yyyy
     /**
@@ -72,13 +75,18 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
 
     Context context;
 
-    GameControllerImpl gameController;
+    GameController gameController;
 
     String pendingCommand=null;
 
 
     @ViewById(R.id.serverCheckbox)
     CheckBox serverCheckBox;
+
+    @ViewById(R.id.pkCheckbox)
+    CheckBox pkCheckbox;
+
+
 
     @ViewById(R.id.logTextView)
     TextView logTextView;
@@ -185,17 +193,25 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
     void afterViews(){
        populateFieldsFromPreferences();
         logTextView.setMovementMethod(new ScrollingMovementMethod());
+
     }
 
     void populateFieldsFromPreferences(){
 
         serverCheckBox.setChecked(preferences.getBoolean(PREFERENCE_LOCAL_SERVER,false));
+        pkCheckbox.setChecked(preferences.getBoolean(PREFERENCE_PENALTY_KICKS,false));
     }
 
     @Click
     void serverCheckbox(){
 
         editPreference(PREFERENCE_LOCAL_SERVER,serverCheckBox.isChecked());
+    }
+
+    @Click
+    void pkCheckbox(){
+
+        editPreference(PREFERENCE_PENALTY_KICKS,pkCheckbox.isChecked());
     }
 
     private void editPreference(String key,Boolean value)
@@ -212,6 +228,10 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
 
     private boolean isLocalServer(){
         return getPreferenceBoolean(PREFERENCE_LOCAL_SERVER);
+    }
+
+    private boolean isPk(){
+        return getPreferenceBoolean(PREFERENCE_PENALTY_KICKS);
     }
 
     @Override
@@ -317,7 +337,7 @@ private boolean isRegistered(){
             user.setName(userName);
             user.setRegId(gcmRegistrer.getRegistrationId());
             user.setPhoneNumber(Utils.getPhoneNumber(this));
-            gameController= GameControllerImpl.createGameController(AndroidHttp.newCompatibleTransport(), new JacksonFactory(), user, this, isLocalServer());
+            gameController= GameController.createGameController(AndroidHttp.newCompatibleTransport(), new JacksonFactory(), user, this, isLocalServer(), Build.PRODUCT);
             log("Connected");
             afterInitBackgroundProcess();
 
@@ -419,8 +439,13 @@ private void setBuilderToLocalServer(com.google.api.client.googleapis.services.j
 
     @Click(R.id.launchButton)
     void startGameActivity(){
-        Intent myIntent = new Intent(StartActivity.this, AndroidLauncher.class);
+        Intent myIntent;
+        if(isPk()){
+            myIntent = new Intent(StartActivity.this, GameActivity_.class);
+        }else {
 
+            myIntent = new Intent(StartActivity.this, AndroidLauncher.class);
+        }
         startActivity(myIntent);
 
     }
@@ -429,15 +454,21 @@ private void setBuilderToLocalServer(com.google.api.client.googleapis.services.j
             new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
-                    try {
-                        gameController.processCommand(intent.getExtras().getString("COMMAND"));
-                    } catch (IOException e) {
-                        log(e.getMessage());
-                        e.printStackTrace();
-                    }
+                    sendCommandToGameController(intent.getExtras().getString("COMMAND"));
 
                 }
             };
+
+
+@Background
+    void sendCommandToGameController(String command){
+        try {
+            gameController.processCommand(command);
+        } catch (IOException e) {
+            log(e.getMessage());
+        }
+
+    }
 
 //    private final BroadcastReceiver mHandleTurnReceiver =
 //            new BroadcastReceiver() {
@@ -476,7 +507,7 @@ private void setBuilderToLocalServer(com.google.api.client.googleapis.services.j
     void gameCountdown() throws InterruptedException {
 
         log("el juego comenzará en... ");
-        for (int i=5;i>=0;i--){
+        for (int i=2;i>=0;i--){
             Thread.sleep(1000);
             log(i+"");
         }
@@ -485,7 +516,7 @@ private void setBuilderToLocalServer(com.google.api.client.googleapis.services.j
 
 
 
-
+@UiThread
     public void incomingChallenge(final String challengerName, final String matchId){
         AlertDialog.Builder builder = new AlertDialog.Builder(StartActivity.this);
 
@@ -498,7 +529,7 @@ private void setBuilderToLocalServer(com.google.api.client.googleapis.services.j
             }
         });
 
-        builder.setNegativeButton("poo-poo-pooo", new DialogInterface.OnClickListener() {
+        builder.setNegativeButton("No", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();

@@ -88,46 +88,47 @@ public class GcmIntentService extends IntentService {
         String [] command= msg.split(" ");
 
 
-//        if (command[0].equals("T")){
-//            Intent intent = new Intent(StartActivity.TURN_ACTION);
-//            intent.putExtra("COMMAND", command);
-//            this.getApplicationContext().sendBroadcast(intent);
-//            return;
-//        }
-
-        if(StartActivity.isForeground()){
-            Intent intent2 = new Intent(StartActivity.DISPLAY_MESSAGE_ACTION);
-            intent2.putExtra("COMMAND", msg);
-            this.getApplicationContext().sendBroadcast(intent2);
-        }else
-        {
-            mNotificationManager = (NotificationManager)
-                    this.getSystemService(Context.NOTIFICATION_SERVICE);
-
-            Intent intent=new Intent(this.getApplicationContext(), StartActivity_.class);
-            //  intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-            intent.setAction(Intent.ACTION_MAIN);
-            intent.addCategory(Intent.CATEGORY_LAUNCHER);
-            intent.putExtra("COMMAND",msg);
-            intent.setAction(Long.toString(System.currentTimeMillis()));
-
-            PendingIntent contentIntent = PendingIntent.getActivity(this.getApplicationContext(), 0,
-                    intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-
-            NotificationCompat.Builder mBuilder =
-                    new NotificationCompat.Builder(this)
-                            .setSmallIcon(R.drawable.ic_launcher)
-                            .setContentTitle("Playpal")
-                            .setAutoCancel(true)
-                            .setStyle(new NotificationCompat.BigTextStyle()
-                                    .bigText(msg))
-                            .setContentText(msg);
-
-            mBuilder.setContentIntent(contentIntent);
-            mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
+        if (command[0].equals("T")){
+            Intent intent = new Intent(StartActivity.DISPLAY_MESSAGE_ACTION);
+            intent.putExtra("COMMAND", msg);
+            this.getApplicationContext().sendBroadcast(intent);
+            return;
         }
+        else {
 
+            if (StartActivity.isForeground()) {
+                Intent intent2 = new Intent(StartActivity.DISPLAY_MESSAGE_ACTION);
+                intent2.putExtra("COMMAND", msg);
+                this.getApplicationContext().sendBroadcast(intent2);
+            } else {
+                mNotificationManager = (NotificationManager)
+                        this.getSystemService(Context.NOTIFICATION_SERVICE);
+
+                Intent intent = new Intent(this.getApplicationContext(), StartActivity_.class);
+                //  intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+                intent.setAction(Intent.ACTION_MAIN);
+                intent.addCategory(Intent.CATEGORY_LAUNCHER);
+                intent.putExtra("COMMAND", msg);
+                intent.setAction(Long.toString(System.currentTimeMillis()));
+
+                PendingIntent contentIntent = PendingIntent.getActivity(this.getApplicationContext(), 0,
+                        intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                String notificationMessage= command[1] + " te reta a jugar!";
+
+                NotificationCompat.Builder mBuilder =
+                        new NotificationCompat.Builder(this)
+                                .setSmallIcon(R.drawable.ball)
+                                .setContentTitle("Penalty!")
+                                .setAutoCancel(true)
+                                .setStyle(new NotificationCompat.BigTextStyle()
+                                        .bigText(notificationMessage))
+                                .setContentText(notificationMessage);
+
+                mBuilder.setContentIntent(contentIntent);
+                mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
+            }
+        }
 
     }
 }

@@ -1,10 +1,22 @@
 package com.testapps.testLibGDX;
 
+import com.playpalgames.library.GameTurn;
+
 /**
  * Created by javi on 06/08/2014.
  */
-public class TurnAction {
+public class TurnAction implements GameTurn {
 
+
+    @Override
+    public String dataToString() {
+        return null;
+    }
+
+    @Override
+    public void populateFromString(String data) {
+
+    }
 
     enum Action {MOVE, SHOOT, RELOAD}
     Action action;

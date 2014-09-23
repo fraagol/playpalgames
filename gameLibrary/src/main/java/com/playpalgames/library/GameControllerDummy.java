@@ -43,7 +43,7 @@ public class GameControllerDummy extends GameController {
     }
 
     @Override
-    public <T> T getNextTurn() {
+    public  <T extends GameTurn> T getNextTurn(T turn) {
         return null;
     }
 
@@ -58,7 +58,7 @@ public class GameControllerDummy extends GameController {
     }
 
     @Override
-    public void sendTurn(Object o) throws IOException {
+    public <T extends GameTurn> void sendTurn(T o) throws IOException {
 
     }
 
@@ -67,10 +67,10 @@ public class GameControllerDummy extends GameController {
         return null;
     }
 
-    @Override
-    public List<Turn> listTurnsFromNumber(Long turnNumber) throws IOException {
-        return null;
-    }
+//    @Override
+//    public List<Turn> listTurnsFromNumber(Long turnNumber) throws IOException {
+//        return null;
+//    }
 
     @Override
     public List<User> listUsers() throws IOException {
@@ -90,5 +90,10 @@ public class GameControllerDummy extends GameController {
     @Override
     public Long getMatchId() {
         return null;
+    }
+
+    @Override
+    public void addGameClientListener(GameClient gameClient) {
+
     }
 }

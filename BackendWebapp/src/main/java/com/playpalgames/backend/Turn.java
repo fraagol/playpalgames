@@ -21,7 +21,7 @@ public class Turn{
     @Index
     Long turnNumber;
 
-  @Serialize  Object turnData;
+    String turnData;
 
     public Long getId() {
         return id;
@@ -47,11 +47,11 @@ public class Turn{
         this.turnNumber = turnNumber;
     }
 
-    public Object getTurnData() {
+    public String getTurnData() {
         return turnData;
     }
 
-    public void setTurnData(Object turnData) {
+    public void setTurnData(String turnData) {
         this.turnData = turnData;
     }
 
@@ -65,6 +65,6 @@ public class Turn{
 
 
     public String toString(){
-        return "M "+ matchId+ " N "+this.getTurnNumber() +" Id "+id;
+        return "M "+ matchId+ " N "+this.getTurnNumber() +" Id "+id + "Data: "+turnData;
     }
 }

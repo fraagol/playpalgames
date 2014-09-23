@@ -61,23 +61,23 @@ public class MyClass {
                         mainMenu.run();
                     }
                 }),
-
-
-                new MenuItem("send turn",new Action() {
-                    @Override
-                    public void run() {
-                        try{
-                           gc.sendTurn("turn data");
-
-
-                        } catch (IOException e) {
-                            log(e.getMessage());
-
-                            e.printStackTrace();
-                        }
-                        mainMenu.run();
-                    }
-                }),
+//
+//
+//                new MenuItem("send turn",new Action() {
+//                    @Override
+//                    public void run() {
+//                        try{
+//                           gc.sendTurn("turn data");
+//
+//
+//                        } catch (IOException e) {
+//                            log(e.getMessage());
+//
+//                            e.printStackTrace();
+//                        }
+//                        mainMenu.run();
+//                    }
+//                }),
 
                 new MenuItem("list turns",new Action() {
                     @Override

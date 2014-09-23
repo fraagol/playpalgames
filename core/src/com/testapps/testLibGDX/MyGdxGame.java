@@ -36,7 +36,7 @@ public class MyGdxGame implements ApplicationListener{
 	public void render () {
         if(!gameController.isMyTurn()) {
             //Not my turn, wait for opponent's turn to be availablle
-            TurnAction turnAction = gameController.<TurnAction>getNextTurn();
+            TurnAction turnAction = gameController.<TurnAction>getNextTurn(new TurnAction());
             if (turnAction != null) {
                 //TODO: process turn
 

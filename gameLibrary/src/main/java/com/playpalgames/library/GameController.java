@@ -16,8 +16,8 @@ public abstract class GameController {
 
     private static GameController GAME_CONTROLLER;
 
-    public static GameController createGameController(HttpTransport httpTransport, JsonFactory jsonFactory, User userP, ChallengesClient challengesClient, boolean localServer) throws IOException{
-        GAME_CONTROLLER=new GameControllerImpl(httpTransport,jsonFactory,userP, challengesClient, localServer);
+    public static GameController createGameController(HttpTransport httpTransport, JsonFactory jsonFactory, User userP, ChallengesClient challengesClient, boolean localServer, String build) throws IOException{
+        GAME_CONTROLLER=new GameControllerImpl(httpTransport,jsonFactory,userP, challengesClient, localServer,build);
         return GAME_CONTROLLER;
     }
 
@@ -41,17 +41,17 @@ public abstract class GameController {
 
     abstract public void getTurnsFromServer() throws IOException;
 
-    abstract public  <T> T getNextTurn();
+    abstract public  <T extends GameTurn> T getNextTurn(T turn);
 
     abstract public Match createMatch() throws IOException;
 
     abstract public void joinMatch(Long matchId) throws IOException;
 
-    abstract public void sendTurn(Object o) throws IOException;
+    abstract public <T extends GameTurn> void sendTurn(T o) throws IOException;
 
     abstract public List<Turn> listTurns() throws IOException;
 
-    abstract public List<Turn> listTurnsFromNumber(Long turnNumber) throws IOException;
+    //abstract public List<Turn> listTurnsFromNumber(Long turnNumber) throws IOException;
 
     abstract public List<User> listUsers() throws IOException;
 
@@ -60,4 +60,6 @@ public abstract class GameController {
     abstract public void acceptChallenge(String matchId)throws IOException;
 
     abstract public Long getMatchId();
+
+    abstract public void addGameClientListener(GameClient gameClient);
 }

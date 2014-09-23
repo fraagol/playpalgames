@@ -34,26 +34,33 @@ private static String LOCK="LOCK";
      * @return The object to be added.
      */
     @ApiMethod(name = "insertTurn")
-    public Turn insertTurn(Turn turn) {
+    public Turn insertTurn(Turn turn) throws IOException {
         Turn lastTurn;
        synchronized (LOCK) {
-           LOG.info(this.toString()+" "+Thread.currentThread().getId());
+           LOG.info("turnData: "+turn.getTurnData());
            lastTurn = ofy().load().type(Turn.class).filter("matchId", turn.getMatchId()).order("-turnNumber").first().now();
            turn.setTurnNumber(lastTurn != null ? lastTurn.getTurnNumber() + 1 : 0);
            ofy().save().entity(turn).now();
 
-//           try {
-//               if(turn.getTurnNumber()%2==0)
-//                   Thread.sleep(3000);
-//           } catch (InterruptedException e) {
-//               e.printStackTrace();
-//           }
        }
         if (lastTurn!=null) {
             LOG.info("Calling insertTurn method. Last turn number: " + lastTurn.getTurnNumber() + " id " + lastTurn.getId());
         }else{
             LOG.info("Calling insertTurn method first time.");
         }
+        //Notify all players
+        Match match= getById(turn.getMatchId(),Match.class);
+        List<User> players=match.getPlayers();
+        for (User user:players){
+            LOG.info("User: "+user.getName()+" id: "+user.getId()+" TurnUser: "+turn.getPlayerId());
+            //don't notify the same player
+            if (!user.getId().equals(turn.getPlayerId())){
+                LOG.info("Notifiying turn to user: "+user.getId());
+                sendMessage("T", findRegIdByUserId(user.getId()));
+            }
+
+        }
+
         return turn;
     }
 
@@ -238,6 +245,11 @@ private static String LOCK="LOCK";
 
     private User findUserById(Long id){
         return ofy().load().type(User.class).id(id).now();
+    }
+
+    private String findRegIdByUserId(Long id){
+        User user= findUserById(id);
+        return user!=null?user.getRegId():null;
     }
 
     private <T> T getById(Long id, Class<T> type) {
