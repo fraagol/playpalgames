@@ -108,4 +108,16 @@ public class BattleFieldController {
         cowboysBand.dispose();
         gameButtons.dispose();
     }
+
+    public void handleNewTurn(TurnAction turnAction) {
+        if(turnAction.getAction() == TurnAction.Action.MOVE) {
+            cowboysBand.getCowboy(turnAction.getPlayer()).moveTo(turnAction.getTarget());
+        }
+        else if(turnAction.getAction() == TurnAction.Action.SHOOT) {
+            cowboysBand.getCowboy(turnAction.getPlayer()).shootTo(turnAction.getTarget());
+        }
+
+        state = this.mainState;
+        state.init();
+    }
 }
