@@ -2,6 +2,7 @@ package com.testapps.testLibGDX;
 
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.playpalgames.library.GameController;
 import com.testapps.testLibGDX.buttons.ActionMoveButton;
 import com.testapps.testLibGDX.buttons.ActionRechargeButton;
 import com.testapps.testLibGDX.buttons.ActionShootButton;
@@ -20,6 +21,9 @@ import com.testapps.testLibGDX.gameStates.selectPositionState.SelectPositionStat
 import com.testapps.testLibGDX.gameStates.selectPositionState.SelectorButtonMovePlayer;
 import com.testapps.testLibGDX.gameStates.selectRechargeState.SelectRechargeState;
 import com.testapps.testLibGDX.gameStates.selectShootState.SelectShootState;
+import com.testapps.testLibGDX.gameStates.selectShootState.SelectorButtonShoot;
+
+import java.io.IOException;
 
 public class BattleFieldController {
     CowboyFactory cowboyFactory;
@@ -27,6 +31,7 @@ public class BattleFieldController {
     GameButtons gameButtons;
 
     private IGameStates state;
+    private GameController gameController;
     private InitGameState initGameState;
     private MainState mainState;
     private SelectPositionState selectPositionState;
@@ -35,12 +40,13 @@ public class BattleFieldController {
     private Lives lives;
     private Bullets bullets;
 
-    public BattleFieldController() {
-        cowboyFactory = new CowboyFactory();
-        cowboysBand = new CowboysBand();
-        gameButtons = new GameButtons(this);
-        lives = new Lives();
-        bullets = new Bullets();
+    public BattleFieldController(GameController gameController) {
+        this.cowboyFactory = new CowboyFactory();
+        this.cowboysBand = new CowboysBand();
+        this.gameButtons = new GameButtons(this);
+        this.lives = new Lives();
+        this.bullets = new Bullets();
+        this.gameController = gameController;
     }
 
     public void create() {
@@ -91,12 +97,20 @@ public class BattleFieldController {
     }
 
     public void buttonPressed(IButtonsSubscribed buttonSubscribed) {
+
         if(buttonSubscribed instanceof SelectorButtonMovePlayer)
         {
             state = this.mainState;
         }
-
         state.init();
+
+        try {
+            gameController.sendTurn(new TurnAction(buttonSubscribed.getAction(),
+                    cowboysBand.getMyCowboy().getID(),
+                    buttonSubscribed.getBoardPos()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void dispose() {

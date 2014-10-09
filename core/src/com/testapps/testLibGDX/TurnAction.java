@@ -7,6 +7,13 @@ import com.playpalgames.library.GameTurn;
  */
 public class TurnAction implements GameTurn {
 
+    public TurnAction(){}
+
+    public TurnAction(Action action, int player, int target) {
+        this.action = action;
+        this.player = player;
+        this.target = target;
+    }
 
     @Override
     public String dataToString() {
@@ -18,7 +25,7 @@ public class TurnAction implements GameTurn {
 
     }
 
-    enum Action {MOVE, SHOOT, RELOAD}
+    public enum Action {MOVE, SHOOT, RELOAD}
     Action action;
     //player id
     private  int player=-1;

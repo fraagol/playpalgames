@@ -1,6 +1,7 @@
 package com.testapps.testLibGDX.buttons;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.testapps.testLibGDX.TurnAction;
 
 public interface IButtonsSubscribed {
 
@@ -13,4 +14,8 @@ public interface IButtonsSubscribed {
     public void enable();
 
     public void disable();
+
+    public Integer getBoardPos();
+
+    public TurnAction.Action getAction();
 }

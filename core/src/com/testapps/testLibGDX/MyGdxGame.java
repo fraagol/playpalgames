@@ -18,9 +18,9 @@ public class MyGdxGame implements ApplicationListener{
 	@Override
 	public void create () {
         batch = new SpriteBatch();
-        this.battleField = new BattleFieldController();
-        battleField.create();
         gameController= GameController.getInstance();
+        this.battleField = new BattleFieldController(gameController);
+        battleField.create();
 
         //TODO: set up game(cowboys position, first player to move...) according to player's role: host or guest
         boolean amIHost= gameController.isHost();
