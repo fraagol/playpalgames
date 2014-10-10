@@ -7,6 +7,13 @@ import com.playpalgames.library.GameTurn;
  */
 public class TurnAction implements GameTurn {
 
+    public TurnAction(){}
+
+    public TurnAction(Action action, int player, int target) {
+        this.action = action;
+        this.player = player;
+        this.target = target;
+    }
 
     @Override
     public String dataToString() {
@@ -18,16 +25,12 @@ public class TurnAction implements GameTurn {
 
     }
 
-    enum Action {MOVE, SHOOT, RELOAD}
+    public enum Action {MOVE, SHOOT, RELOAD}
     Action action;
     //player id
     private  int player=-1;
-    //Shoot target
+    //Shoot/move target
     private  int target=-1;
-
-    //Move coords.
-    private int origPos=-1;
-    private int destPos=-1;
 
     public Action getAction() {
         return action;
@@ -51,21 +54,5 @@ public class TurnAction implements GameTurn {
 
     public void setTarget(int target) {
         this.target = target;
-    }
-
-    public int getOrigPos() {
-        return origPos;
-    }
-
-    public void setOrigPos(int origPos) {
-        this.origPos = origPos;
-    }
-
-    public int getDestPos() {
-        return destPos;
-    }
-
-    public void setDestPos(int destPos) {
-        this.destPos = destPos;
     }
 }

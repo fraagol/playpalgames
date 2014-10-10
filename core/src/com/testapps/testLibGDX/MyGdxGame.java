@@ -18,9 +18,9 @@ public class MyGdxGame implements ApplicationListener{
 	@Override
 	public void create () {
         batch = new SpriteBatch();
-        this.battleField = new BattleFieldController();
-        battleField.create();
         gameController= GameController.getInstance();
+        this.battleField = new BattleFieldController(gameController);
+        battleField.create();
 
         //TODO: set up game(cowboys position, first player to move...) according to player's role: host or guest
         boolean amIHost= gameController.isHost();
@@ -36,10 +36,9 @@ public class MyGdxGame implements ApplicationListener{
 	public void render () {
         if(!gameController.isMyTurn()) {
             //Not my turn, wait for opponent's turn to be availablle
-            TurnAction turnAction = gameController.<TurnAction>getNextTurn(new TurnAction());
+            TurnAction turnAction = gameController .<TurnAction>getNextTurn(new TurnAction());
             if (turnAction != null) {
-                //TODO: process turn
-
+                this.battleField.handleNewTurn(turnAction);
                 gameController.setMyTurn(true);
             }
         }

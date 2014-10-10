@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.testapps.testLibGDX.GameBoard;
+import com.testapps.testLibGDX.TurnAction;
 import com.testapps.testLibGDX.buttons.IButtonsSubscribed;
 
 public class SelectorButtonShoot implements IButtonsSubscribed {
@@ -54,6 +55,11 @@ public class SelectorButtonShoot implements IButtonsSubscribed {
 
     public Integer getBoardPos(){
         return this.boardPos;
+    }
+
+    @Override
+    public TurnAction.Action getAction() {
+        return TurnAction.Action.SHOOT;
     }
 
     @Override
