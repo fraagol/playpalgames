@@ -21,6 +21,8 @@ public class GameControllerImpl extends GameController {
 
     private static GameController GAME_CONTROLLER;
     Match match;
+
+
     User user;
     GameEndpoint gameEndpoint;
     public String message="";
@@ -57,17 +59,6 @@ public class GameControllerImpl extends GameController {
 
 
 
-    public GameControllerImpl(HttpTransport httpTransport, JsonFactory jsonFactory, UserFinder finder, boolean localServer) throws IOException {
-        GameEndpoint.Builder builder= new GameEndpoint.Builder(httpTransport,jsonFactory , new DisableTimeout());
-        if (localServer) {
-            localServer(builder, "");
-        }
-        gameEndpoint=builder.build();
-        user= finder.getUser();
-        user= gameEndpoint.register(user).execute();
-
-    }
-
     public GameControllerImpl(HttpTransport httpTransport, JsonFactory jsonFactory, User userP, ChallengesClient challengesClient, boolean localServer, String buildString) throws IOException {
         GameEndpoint.Builder builder= new GameEndpoint.Builder(httpTransport,jsonFactory , new DisableTimeout());
         if (localServer) {
@@ -88,8 +79,10 @@ public class GameControllerImpl extends GameController {
 
         switch (command[0].charAt(0)){
             case 'A'://challenge Accepted
+
                 setHost(true);
                 setMyTurn(true);
+                match.setId(Long.valueOf(command[1]));
                 initMatch();
                 challengesClient.challengeAccepted();
 
@@ -102,17 +95,27 @@ public class GameControllerImpl extends GameController {
                 break;
         }
         }
+    @Override
+    public List<Match> retrievePendingGames() throws IOException{
+        List<Match> pendingMatches=gameEndpoint.listGamesByPlayer(user.getId()).execute().getItems();
+        return pendingMatches;
+    }
 
     @Override
-    public void getTurnsFromServer() throws IOException {
+    synchronized  public  boolean getTurnsFromServer() throws IOException {
         List<Turn> turns= gameEndpoint.listTurnsFrom(getMatchId(),lastProcessedTurnId).execute().getItems();
-        for (int i = turns.size(); i >0; i--) {
-            availablesTurns.add(turns.get(i-1));
-            lastProcessedTurnId = turns.get(i-1).getTurnNumber();
+        if (turns!=null && turns.size()>0) {
+            for (int i = turns.size(); i > 0; i--) {
+                availablesTurns.add(turns.get(i - 1));
+                lastProcessedTurnId = turns.get(i - 1).getTurnNumber();
+            }
+            if (gameClient != null) {
+                gameClient.turnAvailable();
+
+            }
+        return true;
         }
-        if(gameClient!=null){
-            gameClient.turnAvailable();
-}
+        return false;
     }
 
     @Override
@@ -131,14 +134,16 @@ public class GameControllerImpl extends GameController {
     }
 
     @Override
-    public Match createMatch() throws IOException {
-        match= gameEndpoint.createMatch(user.getId()).execute();
+    public Match createMatch(User userToInvite) throws IOException {
+        match= gameEndpoint.createMatch(user.getId(),userToInvite.getId(),user.getName()).execute();
         info(match);
         return match;
     }
+
+
     @Override
     public void joinMatch(Long matchId) throws IOException {
-        match= gameEndpoint.joinMatch(user.getId(),matchId ).execute();
+        match= gameEndpoint.joinMatch(user.getId(),matchId, user.getName() ).execute();
         log(match);
     }
 
@@ -165,31 +170,18 @@ public class GameControllerImpl extends GameController {
         return turns;
     }
 
-//    @Override
-//    public List<Turn> listTurnsFromNumber(Long turnNumber) throws IOException {
-//        List<Turn> turns=  gameEndpoint.listTurnsFrom(match.getId(),turnNumber).execute().getItems();
-//        for(Turn turnN:turns){
-//
-//            log(turnN);
-//        }
-//        return turns;
-//    }
 
     @Override
     public List<User> listUsers() throws IOException {
-        List<User> users=  gameEndpoint.listDevices().execute().getItems();
+        List<User> users=  gameEndpoint.listOthersDevices(user.getId()).execute().getItems();
         return  users;
     }
 
-    @Override
-    public void sendInvitation(User userToInvite) throws IOException{
-        log("Sending invitation to match "+match.getId()+" to user "+ userToInvite.getName());
-        gameEndpoint.sendMessage("C "+ user.getName()+" "+ getMatchId(),userToInvite.getRegId()).execute();
-    }
+
 
     @Override
     public void acceptChallenge(String matchId)throws IOException{
-        match=gameEndpoint.joinMatch(user.getId(),Long.valueOf(matchId)).execute();
+        match=gameEndpoint.joinMatch(user.getId(),Long.valueOf(matchId),user.getName()).execute();
         setHost(false);
         setMyTurn(false);
         initMatch();
@@ -225,6 +217,11 @@ public class GameControllerImpl extends GameController {
     private static void info(Object s){
         LOG.info(s.toString());
 
+    }
+
+
+    public User getUser() {
+        return user;
     }
 
     class DisableTimeout implements HttpRequestInitializer {

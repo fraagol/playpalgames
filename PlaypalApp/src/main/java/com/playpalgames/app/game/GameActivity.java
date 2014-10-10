@@ -2,6 +2,7 @@ package com.playpalgames.app.game;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.View;
@@ -9,6 +10,7 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TableRow;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.playpalgames.app.R;
 import com.playpalgames.library.GameClient;
@@ -70,11 +72,17 @@ public class GameActivity extends Activity implements GameClient {
     @ViewById
     TableRow scoreP1Row;
 
+    CountDownTimer timer;
+
 
     @ViewById
     TableRow scoreP2Row;
 
+    @ViewById(R.id.questionText)
+    TextView questionText;
+    String questionAux=null;
 
+    boolean waitingTurn=false;
 
     SimpleDateFormat sdfDate = new SimpleDateFormat("HH:mm:ss");//dd/MM/yyyy
 
@@ -100,9 +108,40 @@ public class GameActivity extends Activity implements GameClient {
         gameController.addGameClientListener(this);
         log("Comienza la tanda de penalties");
         iShoot = gameController.isHost();
+        waitingTurn=!iShoot;
         localTurn = new PenaltyTurn();
         remoteTurn= new PenaltyTurn();
+       timer= new CountDownTimer(300000, 20000) {
+
+            public void onTick(long millisUntilFinished) {
+                checkForTurns();
+            }
+
+            public void onFinish() {
+
+            }
+        };
         turn();
+    }
+
+
+    @UiThread
+    void toast(String message){
+        Toast.makeText(GameActivity.this,message,Toast.LENGTH_SHORT).show();
+
+    }
+
+    @Background
+    void checkForTurns(){
+        try {
+            if(! gameController.getTurnsFromServer())
+            {
+                toast("Esperando...");
+            }
+        } catch (IOException e) {
+            toast(e.getMessage());
+        }
+
     }
 
     @Background
@@ -121,6 +160,7 @@ public class GameActivity extends Activity implements GameClient {
                     localTurn.setShoot(direction);
                     gameController.sendTurn(localTurn);
                     state = STATE_SHOOTER_WAIT;
+                    timer.start();
                     break;
                 case STATE_KEEPER_SAVE:
                     enableButtons(false);
@@ -145,20 +185,22 @@ public class GameActivity extends Activity implements GameClient {
     }
 
     void finishMatch() {
-        log("Has " + (localScore > remoteScore ? "GANADO!" : "PERDIDO!"));
+        log("Has " + (localScore > remoteScore ? "GANADO!" : "PERDIDO!"), true);
+        timer.cancel();
     }
 
     void turn() {
-
+        timer.cancel();
         shoot++;
         if (iShoot) {
             enableButtons(true);
-            log("Te toca tirar, ¿hacia donde miras?");
+            log("Te toca tirar, ¿hacia donde miras?",true);
             state = STATE_SHOOTER_LOOK;
             enableButtons(true);
         } else {
 
-            log("Eres el portero, esperando al lanzador");
+            log("Eres el portero, esperando al lanzador",true);
+            timer.start();
             state = STATE_KEEPER_WAIT;
             enableButtons(false);
         }
@@ -167,6 +209,7 @@ public class GameActivity extends Activity implements GameClient {
     @Override
     public void turnAvailable() {
         remoteTurn = gameController.<PenaltyTurn>getNextTurn(remoteTurn);
+        timer.cancel();
         switch (state) {
             case STATE_KEEPER_WAIT:
                 log("El delantero mira a la " + translate(remoteTurn.getLook())+" ¿Hacia donde te lanzas?");
@@ -185,7 +228,7 @@ public class GameActivity extends Activity implements GameClient {
                 }
                 break;
             default:
-                log("Error, turno recibido en estado " + state + " inválido");
+                log("Error, turno"+remoteTurn.dataToString()+" en estado " + state + " inválido");
         }
 
     }
@@ -228,11 +271,11 @@ public class GameActivity extends Activity implements GameClient {
             case STATE_KEEPER_END:
                 //I'm de goalkeeper
                 if (goal(remoteTurn, localTurn)) {
-                    log("GOL!!! El tiro iba por la "+ translate(remoteTurn.getShoot()));
+                    log("GOL!!!");
                     remoteScore++;
                     remoteGoal();
                 } else{
-                    log("PARADA!!! El tiro iba por la "+ translate(remoteTurn.getShoot()));
+                    log("PARADA!!!");
                     remoteFail();
                 }
 
@@ -240,11 +283,11 @@ public class GameActivity extends Activity implements GameClient {
             case STATE_SHOOTER_END:
                 //I'm de shooter
                 if (goal(localTurn, remoteTurn)) {
-                    log("GOL!!! El portero se ha tirado a la "+ translate(remoteTurn.getSave()));
+                    log("GOL!!!");
                     localScore++;
                     localGoal();
                 }else{
-                    log("PARADA!!! El portero se ha tirado por la "+ translate(remoteTurn.getSave()));
+                    log("PARADA!!!");
                     localFail();
                 }
                 break;
@@ -290,13 +333,22 @@ public class GameActivity extends Activity implements GameClient {
 
     @UiThread
     void enableButtons(boolean enable) {
+        waitingTurn=!enable;
         leftButton.setVisibility(enable ? View.VISIBLE:View.INVISIBLE);
         rightButton.setVisibility(enable ? View.VISIBLE : View.INVISIBLE);
 
     }
 
     @UiThread
-    void log(String msg) {
+    void log(String msg, boolean keep) {
+
+        if (keep){
+            questionAux+=msg+"\n";
+        }
+        else{
+            questionAux=msg+"\n";
+        }
+        questionText.setText(questionAux);
 
         Date now = new Date();
         String strDate = sdfDate.format(now);
@@ -307,7 +359,16 @@ public class GameActivity extends Activity implements GameClient {
             logTextView.setText(auxLog);
 
         }
+
+
     }
+
+    void log(String msg) {
+        log(msg,false);
+
+    }
+
+
 
     @Click
     void leftButton() {
@@ -319,9 +380,15 @@ public class GameActivity extends Activity implements GameClient {
         setAction(RIGHT);
     }
 
-    @Click
-    void testButton() {
-        localGoal();
+    @Override
+    protected void onPause() {
+        super.onPause();
+        timer.cancel();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        timer.cancel();
+    }
 }

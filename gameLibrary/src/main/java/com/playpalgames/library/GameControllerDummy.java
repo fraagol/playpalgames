@@ -38,8 +38,13 @@ public class GameControllerDummy extends GameController {
     }
 
     @Override
-    public void getTurnsFromServer() throws IOException {
+    public List<Match> retrievePendingGames() throws IOException {
+        return null;
+    }
 
+    @Override
+    public boolean getTurnsFromServer() throws IOException {
+return false;
     }
 
     @Override
@@ -48,9 +53,10 @@ public class GameControllerDummy extends GameController {
     }
 
     @Override
-    public Match createMatch() throws IOException {
+    public Match createMatch(User userToInvite) throws IOException {
         return null;
     }
+
 
     @Override
     public void joinMatch(Long matchId) throws IOException {
@@ -67,6 +73,11 @@ public class GameControllerDummy extends GameController {
         return null;
     }
 
+    @Override
+    public User getUser() {
+        return null;
+    }
+
 //    @Override
 //    public List<Turn> listTurnsFromNumber(Long turnNumber) throws IOException {
 //        return null;
@@ -77,10 +88,6 @@ public class GameControllerDummy extends GameController {
         return null;
     }
 
-    @Override
-    public void sendInvitation(User userToInvite) throws IOException {
-
-    }
 
     @Override
     public void acceptChallenge(String matchId) throws IOException {

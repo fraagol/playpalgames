@@ -11,75 +11,50 @@
 
 
     <TextView
-        android:id="@+id/scoreP2Label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_alignParentTop="true"
-        android:text="P2"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
-
-    <TextView
-        android:id="@+id/scoreP1Label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:text="P1"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
-
-    <TextView
-        android:id="@+id/scoreP1Text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/scoreP1Label"
-        android:text="0"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
-
-    <TextView
-        android:id="@+id/scoreP2Text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true"
-        android:layout_below="@+id/scoreP2Label"
-        android:text="0"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
-
-    <TextView
         android:id="@+id/questionText"
-        android:layout_width="wrap_content"
+        android:layout_width="fill_parent"
         android:layout_height="100dp"
-        android:layout_alignParentEnd="true"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/linearLayout"
 
-        android:gravity="center_horizontal"
-        android:text="Punto de penalty"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:background="#77000000" />
-
-    <Button
-        android:id="@+id/leftButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_below="@+id/questionText"
-        android:text="Izquierda" />
-
-    <Button
-        android:id="@+id/rightButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/leftButton"
-        android:layout_alignParentEnd="true"
+        android:gravity="bottom"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:background="#77000000"
+        android:maxLines="3"
+        android:layout_above="@+id/bottomLinearLayout"
         android:layout_alignParentRight="true"
-        android:text="Derecha" />
+        android:layout_alignParentEnd="true" />
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+
+        android:id="@+id/bottomLinearLayout"
+        android:gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" >
+
+
+        <Button
+            android:id="@+id/leftButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Izquierda"
+/>
+
+        <Button
+            android:id="@+id/rightButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/leftButton"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:text="Derecha" />
+
+
+        </LinearLayout>
+
+
 
     <TextView
         android:id="@+id/logTextView"
@@ -90,18 +65,19 @@
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
         android:layout_alignParentStart="true"
-        android:layout_below="@+id/leftButton"
+        android:layout_below="@+id/bottomLinearLayout"
         android:ellipsize="marquee"
         android:gravity="bottom"
 
         android:scrollbars="vertical"
         android:background="#77000000"
-        android:autoText="false" />
+        android:autoText="false"
+        android:visibility="gone" />
 
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/scoreP1Text"
+
         android:id="@+id/linearLayout"
         android:gravity="center_horizontal"
         >
@@ -121,6 +97,22 @@
                 android:layout_gravity="center_horizontal"
                 android:showDividers="beginning|middle|end">
 
+                <TextView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:width="40dp"
+
+                    android:gravity="center"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    />
+                <TextView
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:width="40dp"
+
+                    android:gravity="center"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    />
                 <TextView
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
@@ -176,23 +168,46 @@
             <TableRow
                 android:id="@+id/scoreP1Row"
                 >
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Tú"
+                    android:gravity="center"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    >
 
+                </TextView>
+                <TextView
+                    android:id="@+id/scoreP1Text"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="0"
+                    android:textAppearance="?android:attr/textAppearanceLarge" />
 
             </TableRow>
 
             <TableRow android:id="@+id/scoreP2Row">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Rival "
+                    android:gravity="center"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    >
+
+                </TextView>
+
+                <TextView
+                    android:id="@+id/scoreP2Text"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:text="0"
+                    android:textAppearance="?android:attr/textAppearanceLarge" />
 
             </TableRow>
         </TableLayout>
     </LinearLayout>
-
-
-    <Button
-        android:id="@+id/testButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/leftButton"
-        android:layout_centerHorizontal="true"
-        android:text="Test" />
 
 </RelativeLayout>

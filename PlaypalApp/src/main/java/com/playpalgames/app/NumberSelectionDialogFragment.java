@@ -20,13 +20,11 @@ public class NumberSelectionDialogFragment extends DialogFragment {
 
     NumberDialogListener activityListener;
 
-    private final String[] numbersStringArray;
 
-    public NumberSelectionDialogFragment(String[] numbersStringArray){
-       super();
-   this.numbersStringArray=    numbersStringArray;
 
-   }
+    public NumberSelectionDialogFragment(){
+        super();
+       }
 
     @Override
     public void onAttach(Activity activity){
@@ -46,9 +44,10 @@ public class NumberSelectionDialogFragment extends DialogFragment {
     public Dialog onCreateDialog(Bundle savedInstanceState) {
         // Use the Builder class for convenient dialog construction
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
-
+        Bundle bundle=getArguments();
+        String[] names= bundle.getStringArray("names");
         builder.setTitle(R.string.pick_number)
-                .setItems(numbersStringArray, new DialogInterface.OnClickListener() {
+                .setItems(names, new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int which) {
                         activityListener.onNumberPicked(which);
 

@@ -17,6 +17,7 @@
 package com.playpalgames.app;
 
 import android.app.IntentService;
+import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -27,6 +28,8 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.playpalgames.app.game.KickStartActivity;
+import com.playpalgames.app.game.KickStartActivity_;
 
 /**
  * This {@code IntentService} does the actual handling of the GCM message.
@@ -62,17 +65,17 @@ public class GcmIntentService extends IntentService {
              */
             if (GoogleCloudMessaging.
                     MESSAGE_TYPE_SEND_ERROR.equals(messageType)) {
-                sendNotification("Send error: " + extras.toString());
+                processMessage("Send error: " + extras.toString());
             } else if (GoogleCloudMessaging.
                     MESSAGE_TYPE_DELETED.equals(messageType)) {
-                sendNotification("Deleted messages on server: " +
+                processMessage("Deleted messages on server: " +
                         extras.toString());
                 // If it's a regular GCM message, do some work.
             } else if (GoogleCloudMessaging.
                     MESSAGE_TYPE_MESSAGE.equals(messageType)) {
                 Log.i(TAG, "Completed work @ " + SystemClock.elapsedRealtime());
                 // Post notification of received message.
-                sendNotification(extras.getString("message"));
+                processMessage(extras.getString("message"));
 
                 Log.i(TAG, "Received: " + extras.toString());
             }
@@ -81,55 +84,69 @@ public class GcmIntentService extends IntentService {
         GcmBroadcastReceiver.completeWakefulIntent(intent);
     }
 
+
+    private void launchIntent(String msg){
+        Intent intent = new Intent(KickStartActivity.DISPLAY_MESSAGE_ACTION);
+        intent.putExtra("COMMAND", msg);
+        this.getApplicationContext().sendBroadcast(intent);
+    }
     // Put the message into a notification and post it.
     // This is just one simple example of what you might choose to do with
     // a GCM message.
-    private void sendNotification(String msg) {
+    private void processMessage(String msg) {
         String [] command= msg.split(" ");
+        char action=command[0].charAt(0);
 
+        String notificationMessage="";
+        switch (action){
+            case 'T':
+                //If message if a turn, send an intent to the application to retrieve the message
+                launchIntent(msg);
+                return;
+            case 'C':
+                notificationMessage  = command[1] + " te reta a jugar!";
+                break;
+            case 'A':
+                notificationMessage = " Reto aceptado!";
+                break;
 
-        if (command[0].equals("T")){
-            Intent intent = new Intent(StartActivity.DISPLAY_MESSAGE_ACTION);
-            intent.putExtra("COMMAND", msg);
-            this.getApplicationContext().sendBroadcast(intent);
-            return;
         }
-        else {
-
-            if (StartActivity.isForeground()) {
-                Intent intent2 = new Intent(StartActivity.DISPLAY_MESSAGE_ACTION);
-                intent2.putExtra("COMMAND", msg);
-                this.getApplicationContext().sendBroadcast(intent2);
+            if (KickStartActivity.isForeground()) {
+                launchIntent(msg);
             } else {
-                mNotificationManager = (NotificationManager)
-                        this.getSystemService(Context.NOTIFICATION_SERVICE);
-
-                Intent intent = new Intent(this.getApplicationContext(), StartActivity_.class);
-                //  intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                intent.setAction(Intent.ACTION_MAIN);
-                intent.addCategory(Intent.CATEGORY_LAUNCHER);
-                intent.putExtra("COMMAND", msg);
-                intent.setAction(Long.toString(System.currentTimeMillis()));
-
-                PendingIntent contentIntent = PendingIntent.getActivity(this.getApplicationContext(), 0,
-                        intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-                String notificationMessage= command[1] + " te reta a jugar!";
-
-                NotificationCompat.Builder mBuilder =
-                        new NotificationCompat.Builder(this)
-                                .setSmallIcon(R.drawable.ball)
-                                .setContentTitle("Penalty!")
-                                .setAutoCancel(true)
-                                .setStyle(new NotificationCompat.BigTextStyle()
-                                        .bigText(notificationMessage))
-                                .setContentText(notificationMessage);
-
-                mBuilder.setContentIntent(contentIntent);
-                mNotificationManager.notify(NOTIFICATION_ID, mBuilder.build());
+                sendNotification(notificationMessage,msg);
             }
-        }
 
+    }
+
+    private void sendNotification(String notificationMessage, String command) {
+        mNotificationManager = (NotificationManager)
+                this.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        Intent intent = new Intent(this.getApplicationContext(), KickStartActivity_.class);
+        intent.setAction(Intent.ACTION_MAIN);
+        intent.addCategory(Intent.CATEGORY_LAUNCHER);
+        intent.putExtra("COMMAND", command);
+        intent.setAction(Long.toString(System.currentTimeMillis()));
+
+        PendingIntent contentIntent = PendingIntent.getActivity(this.getApplicationContext(), 0,
+                intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.ball)
+                        .setContentTitle("Penalty!")
+                        .setAutoCancel(true)
+                        .setStyle(new NotificationCompat.BigTextStyle()
+                                .bigText(notificationMessage))
+                        .setContentText(notificationMessage);
+
+        mBuilder.setContentIntent(contentIntent);
+        Notification note = mBuilder.build();
+        note.defaults |= Notification.DEFAULT_VIBRATE;
+        note.defaults |= Notification.DEFAULT_SOUND;
+
+        mNotificationManager.notify(NOTIFICATION_ID, note);
     }
 }
 

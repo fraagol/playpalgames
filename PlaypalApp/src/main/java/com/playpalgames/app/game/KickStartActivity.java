@@ -1,4 +1,4 @@
-package com.playpalgames.app;
+package com.playpalgames.app.game;
 
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
@@ -15,15 +15,23 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.CheckBox;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ImageButton;
+import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
 import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.playpalgames.app.game.GameActivity_;
+import com.playpalgames.app.GcmRegistrer;
+import com.playpalgames.app.NumberSelectionDialogFragment;
+import com.playpalgames.app.R;
+import com.playpalgames.app.Utils;
 import com.playpalgames.backend.gameEndpoint.GameEndpoint;
+import com.playpalgames.backend.gameEndpoint.model.Match;
 import com.playpalgames.backend.gameEndpoint.model.User;
 import com.playpalgames.library.ChallengesClient;
 import com.playpalgames.library.GameController;
@@ -37,27 +45,28 @@ import org.androidannotations.annotations.ViewById;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
 
-@EActivity(R.layout.activity_start)
-public class StartActivity extends ActionBarActivity implements ChallengesClient, NumberSelectionDialogFragment.NumberDialogListener {
+@EActivity(R.layout.kick_activity_start)
+public class KickStartActivity extends ActionBarActivity implements ChallengesClient, NumberSelectionDialogFragment.NumberDialogListener {
 
     public static final String EXTRA_MESSAGE = "message";
-    public static final String DISPLAY_MESSAGE_ACTION ="com.playpalgames.app.DISPLAY_MESSAGE_ACTION";
-    public static final String TURN_ACTION ="com.playpalgames.app.TURN_ACTION";
+    public static final String DISPLAY_MESSAGE_ACTION = "com.playpalgames.app.DISPLAY_MESSAGE_ACTION";
+    public static final String TURN_ACTION = "com.playpalgames.app.TURN_ACTION";
 
-    private static boolean foreground=false;
+    private static boolean foreground = false;
 
-    public static boolean isForeground(){
+    public static boolean isForeground() {
         return foreground;
     }
 
-    public static final String PREFERENCE_LOCAL_SERVER="LOCAL_SERVER";
-    public static final String PREFERENCE_PENALTY_KICKS="PENALTY_KICKS";
-    public static final String  PREFERENCE_USER_NAME="USER_NAME";
+    public static final String PREFERENCE_LOCAL_SERVER = "LOCAL_SERVER";
+    public static final String PREFERENCE_PENALTY_KICKS = "PENALTY_KICKS";
+    public static final String PREFERENCE_USER_NAME = "USER_NAME";
     SimpleDateFormat sdfDate = new SimpleDateFormat("HH:mm:ss");//dd/MM/yyyy
     /**
      * Substitute you own sender ID here. This is the project number you got
@@ -77,20 +86,20 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
 
     GameController gameController;
 
-    String pendingCommand=null;
+    String pendingCommand = null;
 
-
-    @ViewById(R.id.serverCheckbox)
-    CheckBox serverCheckBox;
-
-    @ViewById(R.id.pkCheckbox)
-    CheckBox pkCheckbox;
-
+    List<Match>pendingGames;
 
 
     @ViewById(R.id.logTextView)
     TextView logTextView;
     String auxLog = "";
+
+    @ViewById(R.id.createGameButton)
+    ImageButton createGameButton;
+
+    @ViewById(R.id.pendingGamesListView)
+    ListView pendingGamesListView;
 
     SharedPreferences preferences;
 
@@ -102,7 +111,7 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
 
         Date now = new Date();
         String strDate = sdfDate.format(now);
-        msg= strDate+" "+msg;
+        msg = strDate + " " + msg;
         Log.e("###########@", msg);
         auxLog += msg + "\n";
         if (logTextView != null) {
@@ -115,19 +124,19 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        foreground=true;
+        foreground = true;
         context = getApplicationContext();
         registerReceiver(mHandleMessageReceiver,
                 new IntentFilter(DISPLAY_MESSAGE_ACTION));
 
         initPreferences();
 
-       Bundle extras= getIntent().getExtras();
-        if(extras!=null) {
-           String command = extras.getString("COMMAND");
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            String command = extras.getString("COMMAND");
             log(command);
             if (command != null) {
-                pendingCommand=command;
+                pendingCommand = command;
                 log("Keeping pending Command");
 
 
@@ -138,12 +147,12 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
     }
 
     @Override
-    public void onNewIntent(Intent intent){
+    public void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        foreground=true;
+        foreground = true;
         Bundle extras = intent.getExtras();
         log("on new intent");
-        if(extras!=null) {
+        if (extras != null) {
             String command = extras.getString("COMMAND");
             log(command);
             if (command != null) {
@@ -164,95 +173,80 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        foreground=false;
+        foreground = false;
         unregisterReceiver(mHandleMessageReceiver);
         //unregisterReceiver(mHandleTurnReceiver);
     }
-    @Override
-    protected void onPause(){
-        super.onPause();
-        foreground=false;
-    }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        foreground = false;
+    }
 
 
     private void initPreferences() {
-        preferences= getSharedPreferences(StartActivity.class.getSimpleName(), Context.MODE_PRIVATE);
-            userName= getPreferenceString(PREFERENCE_USER_NAME);
-         if(userName==null){
-             userName=Utils.getEmail(this);
-             if(userName==null){
-                 userName="Guest"+ new Random().nextInt(1000);
-             }else{
-                 userName=userName.substring(0,userName.indexOf("@"));
-             }
-         }
+        preferences = getSharedPreferences(KickStartActivity.class.getSimpleName(), Context.MODE_PRIVATE);
+        userName = getPreferenceString(PREFERENCE_USER_NAME);
+        if (userName == null) {
+            userName = Utils.getEmail(this);
+            if (userName == null) {
+                userName = "Guest" + new Random().nextInt(1000);
+            } else {
+                userName = userName.substring(0, userName.indexOf("@"));
+            }
+        }
     }
 
     @AfterViews
-    void afterViews(){
-       populateFieldsFromPreferences();
+    void afterViews() {
+
+        populateFieldsFromPreferences();
         logTextView.setMovementMethod(new ScrollingMovementMethod());
 
+
     }
 
-    void populateFieldsFromPreferences(){
+    void populateFieldsFromPreferences() {
 
-        serverCheckBox.setChecked(preferences.getBoolean(PREFERENCE_LOCAL_SERVER,false));
-        pkCheckbox.setChecked(preferences.getBoolean(PREFERENCE_PENALTY_KICKS,false));
+
     }
 
-    @Click
-    void serverCheckbox(){
-
-        editPreference(PREFERENCE_LOCAL_SERVER,serverCheckBox.isChecked());
-    }
-
-    @Click
-    void pkCheckbox(){
-
-        editPreference(PREFERENCE_PENALTY_KICKS,pkCheckbox.isChecked());
-    }
-
-    private void editPreference(String key,Boolean value)
-    {
+    private void editPreference(String key, Boolean value) {
         preferences.edit().putBoolean(key, value).commit();
     }
 
-    private boolean getPreferenceBoolean(String key)
-    {
-        return preferences.getBoolean(key,false);
+    private boolean getPreferenceBoolean(String key) {
+        return preferences.getBoolean(key, false);
     }
 
-    private String getPreferenceString(String key ){return preferences.getString(key,null);}
+    private String getPreferenceString(String key) {
+        return preferences.getString(key, null);
+    }
 
-    private boolean isLocalServer(){
+    private boolean isLocalServer() {
         return getPreferenceBoolean(PREFERENCE_LOCAL_SERVER);
-    }
-
-    private boolean isPk(){
-        return getPreferenceBoolean(PREFERENCE_PENALTY_KICKS);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        foreground=true;
+        foreground = true;
 
     }
 
     @Background
-     void  initGcm(){
+    void initGcm() {
         gcmRegistrer = GcmRegistrer.instance(context,
-                                            preferences,
-                                            SENDER_ID);
+                preferences,
+                SENDER_ID);
         try {
-           if (gcmRegistrer.checkAndRegisterGCM()) {
-               sendRegistrationIdToBackend();
-           } else{
-               finish();
+            if (gcmRegistrer.checkAndRegisterGCM()) {
+                sendRegistrationIdToBackend();
+            } else {
+                finish();
 
-           }
+            }
         } catch (IOException e) {
             //TODO: how to handle background exceptions
             e.printStackTrace();
@@ -274,8 +268,8 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
-        switch (id){
-            case  R.id.action_settings:
+        switch (id) {
+            case R.id.action_settings:
                 return true;
             case R.id.action_registerGCM:
                 initGcm();
@@ -290,17 +284,14 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
     }
 
 
-
-
-private boolean isRegistered(){
-    return gcmRegistrer==null || gcmRegistrer.isRegistered();
-}
-
+    private boolean isRegistered() {
+        return gcmRegistrer == null || gcmRegistrer.isRegistered();
+    }
 
 
     @Background
     void unregister() {
-        if(gcmRegistrer.isRegistered()) {
+        if (gcmRegistrer.isRegistered()) {
 
             try {
                 String removedId = gcmRegistrer.unregister();
@@ -313,8 +304,7 @@ private boolean isRegistered(){
                 logUnregister("ERROR UNREGISTERING");
                 e.printStackTrace();
             }
-        }
-        else{
+        } else {
             log("Not Registered");
         }
 
@@ -333,12 +323,14 @@ private boolean isRegistered(){
     private void sendRegistrationIdToBackend() {
         try {
             log("Connecting to backend");
-            User user= new User();
+            User user = new User();
             user.setName(userName);
             user.setRegId(gcmRegistrer.getRegistrationId());
             user.setPhoneNumber(Utils.getPhoneNumber(this));
-            gameController= GameController.createGameController(AndroidHttp.newCompatibleTransport(), new JacksonFactory(), user, this, isLocalServer(), Build.PRODUCT);
+            gameController = GameController.createGameController(AndroidHttp.newCompatibleTransport(), new JacksonFactory(), user, this, isLocalServer(), Build.PRODUCT);
             log("Connected");
+            retrievePendingGames();
+
             afterInitBackgroundProcess();
 
         } catch (IOException e) {
@@ -349,9 +341,14 @@ private boolean isRegistered(){
 
     }
 
+    private void retrievePendingGames() throws IOException {
+        pendingGames=gameController.retrievePendingGames();
+
+    }
+
     @UiThread
-    public void afterInitBackgroundProcess(){
-        if(pendingCommand!=null) {
+    public void afterInitBackgroundProcess() {
+        if (pendingCommand != null) {
             log("Processing pending command");
             try {
                 gameController.processCommand(pendingCommand);
@@ -359,15 +356,39 @@ private boolean isRegistered(){
                 log(e.getMessage());
                 e.printStackTrace();
             }
-            pendingCommand=null;
+            pendingCommand = null;
         }
+
+        if (pendingGames!=null){
+            List<String> pendingAux=new ArrayList<String>(pendingGames.size());
+            for (int i = 0; i < pendingGames.size(); i++) {
+                pendingAux.add(pendingGames.get(i).getHostName());
+            }
+            pendingGamesListView.setAdapter(new PendingGamesAdapter(this,R.layout.pendinggameitemlayout,  pendingGames) );
+
+pendingGamesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+
+    @Override
+    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+        Match match=((Match) adapterView.getItemAtPosition(i));
+        Toast.makeText(getApplicationContext(), match.getHostName(),Toast.LENGTH_LONG).show();
+        ((PendingGamesAdapter) adapterView.getAdapter()).remove(match);
+        ((PendingGamesAdapter) adapterView.getAdapter()).notifyDataSetChanged();
+    }
+});
+            log("Pending games= "+pendingGames.size());
+        }
+
+        createGameButton.setVisibility(View.VISIBLE);
+
+
+
     }
 
     private void sendUnregistrationIdToBackend(String removedId) {
-        GameEndpoint.Builder reg = new GameEndpoint.Builder(AndroidHttp.newCompatibleTransport(), new JacksonFactory(), null)
-
-                ;
-        if (isLocalServer()){
+        GameEndpoint.Builder reg = new GameEndpoint.Builder(AndroidHttp.newCompatibleTransport(), new JacksonFactory(), null);
+        if (isLocalServer()) {
             setBuilderToLocalServer(reg);
         }
 
@@ -385,14 +406,13 @@ private boolean isRegistered(){
     }
 
 
-
     @Override
     @Background
     public void onNumberPicked(int index) {
 
-        try{
-            log("Sending invitation to match "+gameController.getMatchId()+" to user "+ users.get(index).getName());
-        gameController.createMatch(users.get(index));
+        try {
+            log("Sending invitation to match " + gameController.getMatchId() + " to user " + users.get(index).getName());
+            gameController.createMatch(users.get(index));
         } catch (IOException e) {
             log(e.getMessage());
 
@@ -400,9 +420,9 @@ private boolean isRegistered(){
         }
     }
 
-private void setBuilderToLocalServer(com.google.api.client.googleapis.services.json.AbstractGoogleJsonClient.Builder builder
-){
-    builder.setRootUrl("http://10.0.2.2:8080/_ah/api/")
+    private void setBuilderToLocalServer(com.google.api.client.googleapis.services.json.AbstractGoogleJsonClient.Builder builder
+    ) {
+        builder.setRootUrl("http://10.0.2.2:8080/_ah/api/")
                 .setGoogleClientRequestInitializer(new GoogleClientRequestInitializer() {
                                                        @Override
                                                        public void initialize(AbstractGoogleClientRequest<?> abstractGoogleClientRequest) throws IOException {
@@ -410,26 +430,26 @@ private void setBuilderToLocalServer(com.google.api.client.googleapis.services.j
                                                        }
                                                    }
                 );
-}
+    }
 
-@Background
+    @Background
     @Click
-    void createGameButton(){
+    void createGameButton() {
         try {
 
-        users = gameController.listUsers();
+            users = gameController.listUsers();
             log("users retrieved");
-       String[] userNames= new String[users.size()];
-        for (int i=0; i< users.size();i++) {
-            log("user " + i + " : " + users.get(i).getName());
-            userNames[i]= users.get(i).getName();
-
-        }
+            String[] userNames = new String[users.size()];
+            for (int i = 0; i < users.size(); i++) {
+                log("user " + i + " : " + users.get(i).getName());
+                userNames[i] = users.get(i).getName();
+                //numbersStringArray[i]=list.get(i).getPhoneNumber();
+            }
 
             FragmentManager fm = getSupportFragmentManager();
             NumberSelectionDialogFragment numberSelectionDialogFragment = new NumberSelectionDialogFragment();
             Bundle bundle = new Bundle();
-            bundle.putStringArray("names",userNames);
+            bundle.putStringArray("names", userNames);
             numberSelectionDialogFragment.setArguments(bundle);
             numberSelectionDialogFragment.show(fm, "fragment_select_number");
 
@@ -438,15 +458,9 @@ private void setBuilderToLocalServer(com.google.api.client.googleapis.services.j
         }
     }
 
-    @Click(R.id.launchButton)
-    void startGameActivity(){
-        Intent myIntent;
-        if(isPk()){
-            myIntent = new Intent(StartActivity.this, GameActivity_.class);
-        }else {
 
-            myIntent = new Intent(StartActivity.this, AndroidLauncher.class);
-        }
+    void startGameActivity() {
+        Intent myIntent = new Intent(KickStartActivity.this, GameActivity_.class);
         startActivity(myIntent);
 
     }
@@ -461,8 +475,8 @@ private void setBuilderToLocalServer(com.google.api.client.googleapis.services.j
             };
 
 
-@Background
-    void sendCommandToGameController(String command){
+    @Background
+    void sendCommandToGameController(String command) {
         try {
             gameController.processCommand(command);
         } catch (IOException e) {
@@ -471,31 +485,22 @@ private void setBuilderToLocalServer(com.google.api.client.googleapis.services.j
 
     }
 
-//    private final BroadcastReceiver mHandleTurnReceiver =
-//            new BroadcastReceiver() {
-//                @Override
-//                public void onReceive(Context context, Intent intent) {
-//                    gameController.addTurn(intent.getExtras().getStringArray("COMMAND"));
-//
-//                }
-//            };
-
-
 
     @Background
- void acceptChallenge(String idMatch, String challengerName){
+    void acceptChallenge(String idMatch, String challengerName) {
         log("Has aceptado el desafío!");
         try {
-        gameController.acceptChallenge(idMatch);
-        gameCountdown();
+            gameController.acceptChallenge(idMatch);
+            gameCountdown();
 
         } catch (Exception e) {
             e.printStackTrace();
             log(e.getMessage());
         }
-}
+    }
+
     @Background
-    public void challengeAccepted(){
+    public void challengeAccepted() {
         log("Desafío aceptado!");
         try {
             gameCountdown();
@@ -508,25 +513,24 @@ private void setBuilderToLocalServer(com.google.api.client.googleapis.services.j
     void gameCountdown() throws InterruptedException {
 
         log("el juego comenzará en... ");
-        for (int i=2;i>=0;i--){
+        for (int i = 1; i >= 0; i--) {
             Thread.sleep(1000);
-            log(i+"");
+            log(i + "");
         }
         startGameActivity();
     }
 
 
-
-@UiThread
-    public void incomingChallenge(final String challengerName, final String matchId){
-        AlertDialog.Builder builder = new AlertDialog.Builder(StartActivity.this);
+    @UiThread
+    public void incomingChallenge(final String challengerName, final String matchId) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(KickStartActivity.this);
 
         builder.setTitle("Nuevo desafío");
-        builder.setMessage(challengerName+ " te desafía a un duelo ¿aceptas?");
+        builder.setMessage(challengerName + " te desafía a un duelo ¿aceptas?");
         builder.setPositiveButton("Sí", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                acceptChallenge(matchId,challengerName);
+                acceptChallenge(matchId, challengerName);
             }
         });
 

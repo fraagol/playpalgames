@@ -15,6 +15,7 @@ public class OfyService {
         ObjectifyService.register(User.class);
         ObjectifyService.register(Turn.class);
         ObjectifyService.register(Match.class);
+        ObjectifyService.register(PlayerGame.class);
 
     }
 

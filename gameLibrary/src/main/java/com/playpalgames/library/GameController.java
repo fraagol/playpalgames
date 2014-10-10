@@ -39,11 +39,13 @@ public abstract class GameController {
 
     abstract public void processCommand(String msg) throws IOException;
 
-    abstract public void getTurnsFromServer() throws IOException;
+    public abstract List<Match> retrievePendingGames() throws IOException;
+
+    abstract public boolean getTurnsFromServer() throws IOException;
 
     abstract public  <T extends GameTurn> T getNextTurn(T turn);
 
-    abstract public Match createMatch() throws IOException;
+    public abstract Match createMatch(User userToInvite) throws IOException;
 
     abstract public void joinMatch(Long matchId) throws IOException;
 
@@ -51,11 +53,11 @@ public abstract class GameController {
 
     abstract public List<Turn> listTurns() throws IOException;
 
+    abstract public User getUser();
+
     //abstract public List<Turn> listTurnsFromNumber(Long turnNumber) throws IOException;
 
     abstract public List<User> listUsers() throws IOException;
-
-    abstract public void sendInvitation(User userToInvite) throws IOException;
 
     abstract public void acceptChallenge(String matchId)throws IOException;
 
