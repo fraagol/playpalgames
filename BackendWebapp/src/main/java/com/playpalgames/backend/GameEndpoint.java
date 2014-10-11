@@ -23,7 +23,7 @@ import static com.playpalgames.backend.OfyService.ofy;
  */
 @Api(name = "gameEndpoint", version = "v1", namespace = @ApiNamespace(ownerDomain = "backend.playpalgames.com", ownerName = "backend.playpalgames.com", packagePath = ""))
 public class GameEndpoint {
-    private static String LOCK = "LOCK";
+    private static final String LOCK = "LOCK";
     private static final Logger LOG = Logger.getLogger(GameEndpoint.class.getName());
 
     public static final String COMMAND_ACCEPT_CHALLENGE = "A";
@@ -65,15 +65,16 @@ public class GameEndpoint {
      * @return The match created
      */
     @ApiMethod(name = "createMatch", httpMethod = ApiMethod.HttpMethod.GET)
-    public Match createMatch(@Named("userId") Long userId, @Named("invitedUserId") Long invitedUserId, @Named("username") String username) throws IOException {
+    public Match createMatch(@Named("userId") Long userId, @Named("invitedUserId") Long invitedUserId, @Named("username") String username, @Named("gameType") int gameType) throws IOException {
         LOG.info("Calling createMatch method");
         Match match = new Match();
         match.setHostUserId(userId);
         match.setHostName(username);
         match.setStatus(Match.STATUS_INVITATION_SENT);
+        match.setGameType(gameType);
         saveMatch(match);
         LOG.info("Match created with id " + match.getId());
-        sendMessage(COMMAND_CHALLENGE + " " + username + " " + match.getId(), findRegIdByUserId(invitedUserId));
+        sendMessage(COMMAND_CHALLENGE + " " + username + " " + match.getId() + " " + match.gameType, findRegIdByUserId(invitedUserId));
 
         return match;
     }
@@ -162,8 +163,8 @@ public class GameEndpoint {
     @ApiMethod(name = "listGamesByPlayer")
     public CollectionResponse<Match> listGamesByPlayer(@Named("playerId") long playerId) {
         List<PlayerGame> playerGames = ofy().load().type(PlayerGame.class).filter("playerId", playerId).list();
-        List<Match> matches=ofy().load().type(Match.class).filter("hostUserId",playerId).list();
-        List<Match> matchesGuest=ofy().load().type(Match.class).filter("guestUserId",playerId).list();
+        List<Match> matches = ofy().load().type(Match.class).filter("hostUserId", playerId).list();
+        List<Match> matchesGuest = ofy().load().type(Match.class).filter("guestUserId", playerId).list();
 
         matches.addAll(matchesGuest);
 
@@ -212,15 +213,15 @@ public class GameEndpoint {
         Sender sender = new Sender(API_KEY);
         Message msg = new Message.Builder().addData("message", message).build();
 
-        Result result=null;
+        Result result;
         int numTries = 3;
         while (true) {
             try {
                 result = sender.send(msg, regId, 5);
                 break;
-            } catch (IOException e ) {
+            } catch (IOException e) {
                 e.printStackTrace();
-                LOG.severe("Try "+numTries+ ":"+e.getMessage());
+                LOG.severe("Try " + numTries + ":" + e.getMessage());
                 if (--numTries == 0) throw e;
             }
         }
@@ -255,7 +256,6 @@ public class GameEndpoint {
         Sender sender = new Sender(API_KEY);
         Message msg = new Message.Builder().addData("message", "ping from " + senderNumber).build();
         List<User> records = ofy().load().type(User.class).list();
-        List<User> records2 = ofy().load().type(User.class).filter("phoneNumber", number).list();
         for (User record : records) {
             Result result = sender.send(msg, record.getRegId(), 5);
             if (result.getMessageId() != null) {
@@ -305,12 +305,12 @@ public class GameEndpoint {
     }
 
     private User findUserById(Long id) {
-        LOG.info("findUserById: "+id);
+        LOG.info("findUserById: " + id);
         return ofy().load().type(User.class).id(id).now();
     }
 
     private String findRegIdByUserId(Long id) {
-        LOG.info("findRegIdByUserId: "+id);
+        LOG.info("findRegIdByUserId: " + id);
         User user = findUserById(id);
         return user != null ? user.getRegId() : null;
     }

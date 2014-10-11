@@ -16,15 +16,15 @@ public abstract class GameController {
 
     private static GameController GAME_CONTROLLER;
 
-    public static GameController createGameController(HttpTransport httpTransport, JsonFactory jsonFactory, User userP, ChallengesClient challengesClient, boolean localServer, String build) throws IOException{
-        GAME_CONTROLLER=new GameControllerImpl(httpTransport,jsonFactory,userP, challengesClient, localServer,build);
+    public static GameController createGameController(HttpTransport httpTransport, JsonFactory jsonFactory, User userP, ChallengesClient challengesClient, boolean localServer, String build) throws IOException {
+        GAME_CONTROLLER = new GameControllerImpl(httpTransport, jsonFactory, userP, challengesClient, localServer, build);
         return GAME_CONTROLLER;
     }
 
-    public static GameController getInstance(){
+    public static GameController getInstance() {
         //If game_controller hasn't been initialized, a dummy gameController is created
-        if (GAME_CONTROLLER==null){
-            GAME_CONTROLLER= new GameControllerDummy();
+        if (GAME_CONTROLLER == null) {
+            GAME_CONTROLLER = new GameControllerDummy();
         }
         return GAME_CONTROLLER;
     }
@@ -43,9 +43,9 @@ public abstract class GameController {
 
     abstract public boolean getTurnsFromServer() throws IOException;
 
-    abstract public  <T extends GameTurn> T getNextTurn(T turn);
+    abstract public <T extends GameTurn> T getNextTurn(T turn);
 
-    public abstract Match createMatch(User userToInvite) throws IOException;
+    public abstract Match createMatch(User userToInvite, int gameType) throws IOException;
 
     abstract public void joinMatch(Long matchId) throws IOException;
 
@@ -59,7 +59,7 @@ public abstract class GameController {
 
     abstract public List<User> listUsers() throws IOException;
 
-    abstract public void acceptChallenge(String matchId)throws IOException;
+    abstract public void acceptChallenge(String matchId) throws IOException;
 
     abstract public Long getMatchId();
 

@@ -10,12 +10,12 @@ import com.googlecode.objectify.annotation.Index;
 @Entity
 public class Match {
 
-    public static int STATUS_CREATED=0;
-    public static int STATUS_INVITATION_SENT=1;
-    public static int STATUS_INVITATION_ACCEPTED=2;
-    public static int STATUS_IN_GAME=3;
-    public static int STATUS_CANCELED=4;
-    public static int STATUS_FINISHED=5;
+    public static int STATUS_CREATED = 0;
+    public static int STATUS_INVITATION_SENT = 1;
+    public static int STATUS_INVITATION_ACCEPTED = 2;
+    public static int STATUS_IN_GAME = 3;
+    public static int STATUS_CANCELED = 4;
+    public static int STATUS_FINISHED = 5;
 
 
     @Id
@@ -30,16 +30,15 @@ public class Match {
     @Index
     Integer status;
 
+    int gameType;
 
     String hostName;
 
     String guestName;
 
 
-
-
     public Match() {
-        status=STATUS_CREATED;
+        status = STATUS_CREATED;
     }
 
     public Match(Integer status) {
@@ -93,6 +92,15 @@ public class Match {
     public void setGuestName(String guestName) {
         this.guestName = guestName;
     }
+
+    public int getGameType() {
+        return gameType;
+    }
+
+    public void setGameType(int gameType) {
+        this.gameType = gameType;
+    }
+
 
     @Override
     public String toString() {

@@ -15,7 +15,7 @@
     <ImageButton
         android:layout_width="100dp"
         android:layout_height="100dp"
-        android:id="@+id/createGameButton"
+        android:id="@+id/createKicksGameButton"
 
         android:src="@drawable/ball_play"
         android:scaleType="fitCenter"
@@ -41,7 +41,7 @@
         android:background="#77000000"
         android:autoText="false"
         android:textColor="@android:color/secondary_text_dark"
-        android:layout_below="@+id/createGameButton" />
+        android:layout_below="@+id/createKicksGameButton" />
 
     <ListView
         android:layout_width="wrap_content"
@@ -49,7 +49,7 @@
         android:id="@+id/pendingGamesListView"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:layout_above="@+id/createGameButton"
+        android:layout_above="@+id/createKicksGameButton"
         android:choiceMode="singleChoice" />
 
 

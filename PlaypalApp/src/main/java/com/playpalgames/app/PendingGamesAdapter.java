@@ -1,12 +1,12 @@
-package com.playpalgames.app.game;
+package com.playpalgames.app;
 
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
-import com.playpalgames.app.R;
 
 import com.playpalgames.backend.gameEndpoint.model.Match;
 
@@ -31,8 +31,11 @@ public class PendingGamesAdapter extends ArrayAdapter<Match> {
         // Lookup view for data population
         TextView opponentTextView = (TextView) convertView.findViewById(R.id.gameOpponent);
 
+        ImageView imageView = (ImageView) convertView.findViewById(R.id.ivUserIcon);
+        imageView.setImageResource(StartActivity.GAME_IMAGES_ID[match.getGameType()]);
+
         // Populate the data into the template view using the data object
-       opponentTextView.setText(match.getHostName());
+        opponentTextView.setText(match.getHostName());
 
         // Return the completed view to render on screen
         return convertView;

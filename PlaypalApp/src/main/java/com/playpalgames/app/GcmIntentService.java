@@ -28,8 +28,6 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
-import com.playpalgames.app.game.KickStartActivity;
-import com.playpalgames.app.game.KickStartActivity_;
 
 /**
  * This {@code IntentService} does the actual handling of the GCM message.
@@ -85,37 +83,38 @@ public class GcmIntentService extends IntentService {
     }
 
 
-    private void launchIntent(String msg){
-        Intent intent = new Intent(KickStartActivity.DISPLAY_MESSAGE_ACTION);
+    private void launchIntent(String msg) {
+        Intent intent = new Intent(StartActivity.DISPLAY_MESSAGE_ACTION);
         intent.putExtra("COMMAND", msg);
         this.getApplicationContext().sendBroadcast(intent);
     }
+
     // Put the message into a notification and post it.
     // This is just one simple example of what you might choose to do with
     // a GCM message.
     private void processMessage(String msg) {
-        String [] command= msg.split(" ");
-        char action=command[0].charAt(0);
+        String[] command = msg.split(" ");
+        char action = command[0].charAt(0);
 
-        String notificationMessage="";
-        switch (action){
+        String notificationMessage = "";
+        switch (action) {
             case 'T':
                 //If message if a turn, send an intent to the application to retrieve the message
                 launchIntent(msg);
                 return;
             case 'C':
-                notificationMessage  = command[1] + " te reta a jugar!";
+                notificationMessage = command[1] + " te reta a jugar!";
                 break;
             case 'A':
                 notificationMessage = " Reto aceptado!";
                 break;
 
         }
-            if (KickStartActivity.isForeground()) {
-                launchIntent(msg);
-            } else {
-                sendNotification(notificationMessage,msg);
-            }
+        if (StartActivity.isForeground()) {
+            launchIntent(msg);
+        } else {
+            sendNotification(notificationMessage, msg);
+        }
 
     }
 
@@ -123,7 +122,7 @@ public class GcmIntentService extends IntentService {
         mNotificationManager = (NotificationManager)
                 this.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        Intent intent = new Intent(this.getApplicationContext(), KickStartActivity_.class);
+        Intent intent = new Intent(this.getApplicationContext(), StartActivity_.class);
         intent.setAction(Intent.ACTION_MAIN);
         intent.addCategory(Intent.CATEGORY_LAUNCHER);
         intent.putExtra("COMMAND", command);

@@ -88,7 +88,7 @@ public class GameControllerImpl extends GameController {
 
                 break;
             case 'C': //Challenge received
-                challengesClient.incomingChallenge(command[1], command[2]);
+                challengesClient.incomingChallenge(command[1], command[2], command[3]);
                 break;
             case 'T'://Turns availables
                 getTurnsFromServer();
@@ -134,8 +134,8 @@ public class GameControllerImpl extends GameController {
     }
 
     @Override
-    public Match createMatch(User userToInvite) throws IOException {
-        match= gameEndpoint.createMatch(user.getId(),userToInvite.getId(),user.getName()).execute();
+    public Match createMatch(User userToInvite, int gameType) throws IOException {
+        match = gameEndpoint.createMatch(user.getId(), userToInvite.getId(), user.getName(), gameType).execute();
         info(match);
         return match;
     }

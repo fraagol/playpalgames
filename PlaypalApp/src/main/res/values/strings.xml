@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Kick!</string>
+    <string name="app_name">play!</string>
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="pick_number">Elige tu oponente</string>
     <string name="Unregister">Unregister</string>
     <string name="Unregister_GCM">Unregister GCM</string>
     <string name="Register_GCM">Register GCM</string>
-    <string name="title_activity_game">Penalty Kicks!</string>
+    <string name="title_activity_game">Playpal games</string>
     <string name="cowboy">Bang</string>
 
 </resources>

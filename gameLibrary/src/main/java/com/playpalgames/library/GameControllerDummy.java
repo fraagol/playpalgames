@@ -53,7 +53,7 @@ return false;
     }
 
     @Override
-    public Match createMatch(User userToInvite) throws IOException {
+    public Match createMatch(User userToInvite, int gameType) throws IOException {
         return null;
     }
 
