@@ -7,12 +7,9 @@ import java.util.HashMap;
 
 public class CowboysBand {
     HashMap<Integer, Cowboy> cowboysControllers;
-    private CowboyFactory factory;
 
     public CowboysBand() {
         cowboysControllers = new HashMap<Integer, Cowboy>();
-        factory = new CowboyFactory();
-
     }
 
     public void addCowboyToBand(Cowboy cowboy){
@@ -47,7 +44,6 @@ public class CowboysBand {
     }
 
     public void dispose(){
-        this.factory.dispose();
         for(Cowboy cowboy : this.cowboysControllers.values())
             cowboy.dispose();
     }
