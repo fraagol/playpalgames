@@ -4,14 +4,17 @@ import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.playpalgames.library.GameClient;
 import com.playpalgames.library.GameController;
 
 
-public class MyGdxGame implements ApplicationListener{
+public class MyGdxGame implements ApplicationListener, GameClient {
     private SpriteBatch batch;
     private float elapsedTime = 0;
     private BattleFieldController battleField;
     private GameController gameController;
+    private TurnAction turnAction = new TurnAction();
+    private boolean newTurnAvailable = false;
 
 
 
@@ -35,10 +38,12 @@ public class MyGdxGame implements ApplicationListener{
     @Override
 	public void render () {
         if(!gameController.isMyTurn()) {
-            //Not my turn, wait for opponent's turn to be availablle
-            TurnAction turnAction = gameController .<TurnAction>getNextTurn(new TurnAction());
-            if (turnAction != null) {
+            //TODO:DISABLE BUTTONS!!!
+
+            //Not my turn, check if a turn is available
+            if (newTurnAvailable) {
                 this.battleField.handleNewTurn(turnAction);
+                newTurnAvailable = false;
                 gameController.setMyTurn(true);
             }
         }
@@ -47,16 +52,6 @@ public class MyGdxGame implements ApplicationListener{
         elapsedTime += Gdx.graphics.getDeltaTime();
 
         batch.begin();
-        /*TODO: not here, but somewhere... send local player's action by calling something like:
-        TurnAction turn= new TurnAction();
-        turn.setAction(TurnAction.Action.MOVE);
-        turn.setOrigPos(3);
-        turn.setDestPos(4);
-
-        gameController.sendTurn(turn);
-        gameController.setMyTurn(false);
-
-        */
         this.battleField.render(batch, elapsedTime);
         batch.end();
 	}
@@ -77,5 +72,14 @@ public class MyGdxGame implements ApplicationListener{
 
         batch.dispose();
         this.battleField.dispose();
+    }
+
+    @Override
+    /**
+     * Called by the framework when a new Turn is available
+     */
+    public void turnAvailable() {
+        turnAction = gameController.<TurnAction>getNextTurn(turnAction);
+        newTurnAvailable = true;
     }
 }

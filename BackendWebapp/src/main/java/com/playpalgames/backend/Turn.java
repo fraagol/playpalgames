@@ -3,14 +3,13 @@ package com.playpalgames.backend;
 import com.googlecode.objectify.annotation.Entity;
 import com.googlecode.objectify.annotation.Id;
 import com.googlecode.objectify.annotation.Index;
-import com.googlecode.objectify.annotation.Serialize;
 
 /**
  * Created by javi on 08/07/2014.
  */
 
 @Entity
-public class Turn{
+public class Turn {
     @Id
     Long id;
 
@@ -22,6 +21,10 @@ public class Turn{
     Long turnNumber;
 
     String turnData;
+
+    String gameState;
+
+    boolean opponentIsNext;
 
     public Long getId() {
         return id;
@@ -47,6 +50,14 @@ public class Turn{
         this.turnNumber = turnNumber;
     }
 
+    public boolean isOpponentIsNext() {
+        return opponentIsNext;
+    }
+
+    public void setOpponentIsNext(boolean opponentIsNext) {
+        this.opponentIsNext = opponentIsNext;
+    }
+
     public String getTurnData() {
         return turnData;
     }
@@ -63,8 +74,15 @@ public class Turn{
         this.matchId = matchId;
     }
 
+    public String getGameState() {
+        return gameState;
+    }
 
-    public String toString(){
-        return "M "+ matchId+ " N "+this.getTurnNumber() +" Id "+id + "Data: "+turnData;
+    public void setGameState(String gameState) {
+        this.gameState = gameState;
+    }
+
+    public String toString() {
+        return "M " + matchId + " N " + this.getTurnNumber() + " Id " + id + "Data: " + turnData;
     }
 }

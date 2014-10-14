@@ -7,7 +7,6 @@ import com.googlecode.objectify.ObjectifyService;
 /**
  * Objectify service wrapper so we can statically register our persistence classes
  * More on Objectify here : https://code.google.com/p/objectify-appengine/
- *
  */
 public class OfyService {
 
@@ -15,8 +14,6 @@ public class OfyService {
         ObjectifyService.register(User.class);
         ObjectifyService.register(Turn.class);
         ObjectifyService.register(Match.class);
-        ObjectifyService.register(PlayerGame.class);
-
     }
 
     public static Objectify ofy() {

@@ -2,8 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.playpalgames.app"
     android:versionCode="2"
-    android:versionName="0.2"
-    >
+    android:versionName="0.2">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
@@ -19,15 +18,15 @@
     <uses-permission android:name="com.playpalgames.app.permission.C2D_MESSAGE" />
 
     <application
+        android:name=".PlaypalApplication"
         android:allowBackup="true"
         android:icon="@drawable/ballbig"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@style/AppTheme">
         <activity
             android:name=".StartActivity_"
             android:label="@string/app_name"
-            android:launchMode="singleTask"
-            >
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -35,28 +34,18 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".game.KickStartActivity_"
-            android:label="@string/app_name"
-            android:launchMode="singleTask" >
+            android:name=".AndroidLauncher"
+            android:label="@string/cowboy"
+            android:launchMode="standard">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
-                <!--category android:name="android.intent.category.LAUNCHER" /-->
             </intent-filter>
-        </activity>
-        <activity
-            android:name=".AndroidLauncher"
-            android:label="@string/cowboy"
-            android:launchMode="standard" >
-        <intent-filter>
-            <action android:name="android.intent.action.MAIN" />
-
-        </intent-filter>
         </activity>
 
         <receiver
             android:name=".GcmBroadcastReceiver"
-            android:permission="com.google.android.c2dm.permission.SEND" >
+            android:permission="com.google.android.c2dm.permission.SEND">
             <intent-filter>
                 <action android:name="com.google.android.c2dm.intent.RECEIVE" />
 
@@ -67,9 +56,9 @@
         <service android:name=".GcmIntentService" />
 
         <activity
-            android:name=".game.GameActivity_"
+            android:name=".game.KickGameActivity_"
             android:label="@string/title_activity_game"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

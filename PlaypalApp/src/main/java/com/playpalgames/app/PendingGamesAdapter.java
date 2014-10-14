@@ -9,6 +9,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.playpalgames.backend.gameEndpoint.model.Match;
+import com.playpalgames.library.GameController;
 
 import java.util.List;
 
@@ -16,8 +17,11 @@ import java.util.List;
  * Created by javi on 07/10/2014.
  */
 public class PendingGamesAdapter extends ArrayAdapter<Match> {
-    public PendingGamesAdapter(Context context, int resource, List<Match> objects) {
+    Long userId;
+
+    public PendingGamesAdapter(Context context, int resource, List<Match> objects, Long id) {
         super(context, resource, objects);
+        this.userId = id;
     }
 
     @Override
@@ -30,12 +34,24 @@ public class PendingGamesAdapter extends ArrayAdapter<Match> {
         }
         // Lookup view for data population
         TextView opponentTextView = (TextView) convertView.findViewById(R.id.gameOpponent);
+        // Populate the data into the template view using the data object
+        opponentTextView.setText(match.getHostUserId().equals(userId) ? match.getGuestName() : match.getHostName());
 
+        TextView turnUserTextView = (TextView) convertView.findViewById(R.id.turnUser);
+        switch (match.getStatus()) {
+            case GameController.STATUS_IN_GAME:
+                turnUserTextView.setText(match.getNextTurnPlayerId().equals(userId) ? "Tu turno" : "Esperando a tu oponente");
+                break;
+            case GameController.STATUS_INVITATION_SENT:
+                turnUserTextView.setText(match.getHostUserId().equals(userId) ? "Invitación enviada" : "Invitación recibida");
+                break;
+            case GameController.STATUS_INVITATION_ACCEPTED:
+                turnUserTextView.setText(match.getHostUserId().equals(userId) ? "Desafío aceptado" : "Esperando inicio");
+                break;
+        }
         ImageView imageView = (ImageView) convertView.findViewById(R.id.ivUserIcon);
         imageView.setImageResource(StartActivity.GAME_IMAGES_ID[match.getGameType()]);
 
-        // Populate the data into the template view using the data object
-        opponentTextView.setText(match.getHostName());
 
         // Return the completed view to render on screen
         return convertView;

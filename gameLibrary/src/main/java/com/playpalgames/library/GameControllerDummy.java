@@ -13,6 +13,11 @@ import java.util.List;
 public class GameControllerDummy extends GameController {
 
     @Override
+    public boolean isNewGame() {
+        return false;
+    }
+
+    @Override
     public boolean isMyTurn() {
         return false;
     }
@@ -28,7 +33,22 @@ public class GameControllerDummy extends GameController {
     }
 
     @Override
+    public String getOpponentName() {
+        return null;
+    }
+
+    @Override
     public void setHost(boolean host) {
+
+    }
+
+    @Override
+    public void initMatch() {
+
+    }
+
+    @Override
+    public void exitMatch() {
 
     }
 
@@ -43,13 +63,28 @@ public class GameControllerDummy extends GameController {
     }
 
     @Override
-    public boolean getTurnsFromServer() throws IOException {
-return false;
+    public String getStateAndLastTurn() throws IOException {
+        return null;
     }
 
     @Override
-    public  <T extends GameTurn> T getNextTurn(T turn) {
+    public boolean getTurnsFromServer() throws IOException {
+        return false;
+    }
+
+    @Override
+    public <T extends GameTurn> T getNextTurn(T turn) {
         return null;
+    }
+
+    @Override
+    public void setMatch(Match m) {
+
+    }
+
+    @Override
+    public void endMatch() throws IOException {
+
     }
 
     @Override
@@ -64,7 +99,7 @@ return false;
     }
 
     @Override
-    public <T extends GameTurn> void sendTurn(T o) throws IOException {
+    public <T extends GameTurn> void sendTurn(T o, String gameState, boolean opponentIsNext) throws IOException {
 
     }
 

@@ -7,7 +7,8 @@ import com.playpalgames.library.GameTurn;
  */
 public class TurnAction implements GameTurn {
 
-    public TurnAction(){}
+    public TurnAction() {
+    }
 
     public TurnAction(Action action, int player, int target) {
         this.action = action;
@@ -16,21 +17,34 @@ public class TurnAction implements GameTurn {
     }
 
     @Override
+    /**
+     * Creates an string representing the Turn to be sent
+     */
+
     public String dataToString() {
-        return null;
+        return action.name() + "|" + player + "|" + target;
     }
 
+    /**
+     * Reads the state received and populates the Turn
+     *
+     * @param data
+     */
     @Override
     public void populateFromString(String data) {
-
+        String[] fields = data.split("\\|");
+        action = Action.valueOf(fields[0]);
+        player = Integer.parseInt(fields[1]);
+        target = Integer.parseInt(fields[2]);
     }
 
     public enum Action {MOVE, SHOOT, RELOAD}
+
     Action action;
     //player id
-    private  int player=-1;
+    private int player = -1;
     //Shoot/move target
-    private  int target=-1;
+    private int target = -1;
 
     public Action getAction() {
         return action;

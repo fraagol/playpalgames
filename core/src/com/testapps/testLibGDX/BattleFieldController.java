@@ -14,14 +14,13 @@ import com.testapps.testLibGDX.characters.cowboy.CowboyFactory;
 import com.testapps.testLibGDX.characters.cowboy.CowboysBand;
 import com.testapps.testLibGDX.gameGUI.Bullets;
 import com.testapps.testLibGDX.gameGUI.Lives;
-import com.testapps.testLibGDX.gameStates.InitGameState;
 import com.testapps.testLibGDX.gameStates.IGameStates;
+import com.testapps.testLibGDX.gameStates.InitGameState;
 import com.testapps.testLibGDX.gameStates.MainState;
 import com.testapps.testLibGDX.gameStates.selectPositionState.SelectPositionState;
 import com.testapps.testLibGDX.gameStates.selectPositionState.SelectorButtonMovePlayer;
 import com.testapps.testLibGDX.gameStates.selectRechargeState.SelectRechargeState;
 import com.testapps.testLibGDX.gameStates.selectShootState.SelectShootState;
-import com.testapps.testLibGDX.gameStates.selectShootState.SelectorButtonShoot;
 
 import java.io.IOException;
 
@@ -107,7 +106,7 @@ public class BattleFieldController {
         try {
             gameController.sendTurn(new TurnAction(buttonSubscribed.getAction(),
                     cowboysBand.getMyCowboy().getID(),
-                    buttonSubscribed.getBoardPos()));
+                    buttonSubscribed.getBoardPos()), null, false);
         } catch (IOException e) {
             e.printStackTrace();
         }

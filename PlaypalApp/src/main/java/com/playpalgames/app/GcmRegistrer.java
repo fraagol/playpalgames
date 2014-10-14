@@ -12,6 +12,8 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import java.io.IOException;
 
+import static com.playpalgames.app.E.manage;
+
 /**
  * Created by javi on 30/05/2014.
  */
@@ -37,20 +39,19 @@ public class GcmRegistrer {
     private String senderId;
 
 
-    private GcmRegistrer(Context context,SharedPreferences sharedPreferences, String senderId){
-        this.sharedPreferences=sharedPreferences;
-        this.context=context;
-        this.senderId=senderId;
+    private GcmRegistrer(Context context, SharedPreferences sharedPreferences, String senderId) {
+        this.sharedPreferences = sharedPreferences;
+        this.context = context;
+        this.senderId = senderId;
         gcm = GoogleCloudMessaging.getInstance(context);
 
     }
 
-    
-    public static GcmRegistrer instance(Context context,SharedPreferences sharedPreferences, String senderId)
-    {
-        if(gcmRegistrer==null){
-        gcmRegistrer=new GcmRegistrer(context,sharedPreferences,senderId);
-             }
+
+    public static GcmRegistrer instance(Context context, SharedPreferences sharedPreferences, String senderId) {
+        if (gcmRegistrer == null) {
+            gcmRegistrer = new GcmRegistrer(context, sharedPreferences, senderId);
+        }
         return gcmRegistrer;
 
     }
@@ -72,7 +73,7 @@ public class GcmRegistrer {
         return false;
     }
 
-    private void register() throws IOException{
+    private void register() throws IOException {
         regid = gcm.register(senderId);
         // Persist the regID - no need to register again.
         storeRegistrationId(context, regid);
@@ -83,12 +84,11 @@ public class GcmRegistrer {
 
     public String unregister() throws IOException {
         gcm.unregister();
-       String removedId= removeRegistrationId(context);
+        String removedId = removeRegistrationId(context);
         return removedId;
 
 
     }
-
 
 
     /**
@@ -113,11 +113,10 @@ public class GcmRegistrer {
      * {@code SharedPreferences}.
      *
      * @param context application's context.
-
      */
     private String removeRegistrationId(Context context) {
 
-       String registrationId=  sharedPreferences.getString(PROPERTY_REG_ID, "");
+        String registrationId = sharedPreferences.getString(PROPERTY_REG_ID, "");
         Log.i(TAG, "Removing regId ");
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.remove(PROPERTY_REG_ID);
@@ -147,20 +146,20 @@ public class GcmRegistrer {
         return true;
     }
 
-    private String getRegistrationIdFromPreferences(){
-      return  sharedPreferences.getString(PROPERTY_REG_ID, "");
+    private String getRegistrationIdFromPreferences() {
+        return sharedPreferences.getString(PROPERTY_REG_ID, "");
     }
 
     /**
      * Gets the current registration ID for application on GCM service, if there is one.
-     * <p>
+     * <p/>
      * If result is empty, the app needs to register.
      *
      * @return registration ID, or empty string if there is no existing
-     *         registration ID.
+     * registration ID.
      */
     public String getRegistrationId() {
-        
+
         String registrationId = getRegistrationIdFromPreferences();
         if (registrationId.isEmpty()) {
             Log.i(TAG, "Registration not found.");
@@ -178,9 +177,9 @@ public class GcmRegistrer {
         return registrationId;
     }
 
-public boolean isRegistered(){
-    return !getRegistrationId().isEmpty();
-}
+    public boolean isRegistered() {
+        return !getRegistrationId().isEmpty();
+    }
 
     /**
      * @return Application's version code from the {@code PackageManager}.
@@ -192,6 +191,7 @@ public boolean isRegistered(){
             return packageInfo.versionCode;
         } catch (PackageManager.NameNotFoundException e) {
             // should never happen
+            manage(e);
             throw new RuntimeException("Could not get package name: " + e);
         }
     }

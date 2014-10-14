@@ -6,7 +6,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.playpalgames.app.game.GameActivity"
+    tools:context="com.playpalgames.app.game.KickGameActivity"
     android:background="@drawable/penalty">
 
 
@@ -32,15 +32,14 @@
         android:orientation="horizontal"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" >
+        android:layout_alignParentStart="true">
 
 
         <Button
             android:id="@+id/leftButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Izquierda"
-/>
+            android:text="Izquierda" />
 
         <Button
             android:id="@+id/rightButton"
@@ -51,9 +50,16 @@
             android:layout_alignParentRight="true"
             android:text="Derecha" />
 
-
-        </LinearLayout>
-
+        <Button
+            android:id="@+id/endButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/leftButton"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:text="Salir"
+            android:visibility="gone" />
+    </LinearLayout>
 
 
     <TextView
@@ -79,8 +85,7 @@
         android:layout_height="wrap_content"
 
         android:id="@+id/linearLayout"
-        android:gravity="center_horizontal"
-        >
+        android:gravity="center_horizontal">
 
         <TableLayout
             android:layout_width="wrap_content"
@@ -103,16 +108,16 @@
                     android:width="40dp"
 
                     android:gravity="center"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    />
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
                 <TextView
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:width="40dp"
 
                     android:gravity="center"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    />
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
                 <TextView
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
@@ -122,6 +127,7 @@
                     android:textAppearance="?android:attr/textAppearanceMedium">
 
                 </TextView>
+
                 <TextView
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
@@ -131,6 +137,7 @@
                     android:textAppearance="?android:attr/textAppearanceMedium">
 
                 </TextView>
+
                 <TextView
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
@@ -140,43 +147,41 @@
                     android:textAppearance="?android:attr/textAppearanceMedium">
 
                 </TextView>
+
                 <TextView
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:width="40dp"
                     android:gravity="center"
                     android:text="4"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    >
+                    android:textAppearance="?android:attr/textAppearanceMedium">
 
                 </TextView>
+
                 <TextView
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:width="40dp"
                     android:text="5"
                     android:gravity="center"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    >
+                    android:textAppearance="?android:attr/textAppearanceMedium">
 
                 </TextView>
 
             </TableRow>
 
 
+            <TableRow android:id="@+id/scoreP1Row">
 
-            <TableRow
-                android:id="@+id/scoreP1Row"
-                >
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Tú"
                     android:gravity="center"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    >
+                    android:textAppearance="?android:attr/textAppearanceMedium">
 
                 </TextView>
+
                 <TextView
                     android:id="@+id/scoreP1Text"
                     android:layout_width="fill_parent"
@@ -188,13 +193,13 @@
             </TableRow>
 
             <TableRow android:id="@+id/scoreP2Row">
+
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Rival "
+                    android:id="@+id/opponentNameText"
                     android:gravity="center"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    >
+                    android:textAppearance="?android:attr/textAppearanceMedium">
 
                 </TextView>
 

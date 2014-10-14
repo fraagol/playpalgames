@@ -27,13 +27,14 @@ import com.google.api.client.extensions.android.http.AndroidHttp;
 import com.google.api.client.googleapis.services.AbstractGoogleClientRequest;
 import com.google.api.client.googleapis.services.GoogleClientRequestInitializer;
 import com.google.api.client.json.jackson2.JacksonFactory;
-import com.playpalgames.app.game.GameActivity_;
+import com.playpalgames.app.game.KickGameActivity_;
 import com.playpalgames.backend.gameEndpoint.GameEndpoint;
 import com.playpalgames.backend.gameEndpoint.model.Match;
 import com.playpalgames.backend.gameEndpoint.model.User;
 import com.playpalgames.library.ChallengesClient;
 import com.playpalgames.library.GameController;
 
+import org.acra.ACRA;
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Background;
 import org.androidannotations.annotations.Click;
@@ -47,7 +48,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
-
 
 @EActivity(R.layout.activity_start)
 public class StartActivity extends ActionBarActivity implements ChallengesClient, NumberSelectionDialogFragment.NumberDialogListener {
@@ -127,7 +127,7 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
         Date now = new Date();
         String strDate = sdfDate.format(now);
         msg = strDate + " " + msg;
-        Log.e("###########@", msg);
+        Log.i("###########@", msg);
         auxLog += msg + "\n";
         if (logTextView != null) {
             logTextView.setText(auxLog);
@@ -139,6 +139,7 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ACRA.init(this.getApplication());
         foreground = true;
         context = getApplicationContext();
         registerReceiver(mHandleMessageReceiver,
@@ -175,6 +176,7 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
                 try {
                     gameController.processCommand(command);
                 } catch (IOException e) {
+                    E.manage(e);
                     log(e.getMessage());
                     e.printStackTrace();
                 }
@@ -210,6 +212,7 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
             } else {
                 userName = userName.substring(0, userName.indexOf("@"));
             }
+            editPreference(PREFERENCE_USER_NAME, userName);
         }
     }
 
@@ -242,6 +245,10 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
         preferences.edit().putBoolean(key, value).commit();
     }
 
+    private void editPreference(String key, String value) {
+        preferences.edit().putString(key, value).commit();
+    }
+
     private boolean getPreferenceBoolean(String key) {
         return preferences.getBoolean(key, false);
     }
@@ -262,7 +269,15 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
     protected void onResume() {
         super.onResume();
         foreground = true;
+        if (gameController != null) {
+            retrievePendingGamesOnResume();
+        }
+    }
 
+    @Background
+    void retrievePendingGamesOnResume() {
+        retrievePendingGames();
+        processPendingGames();
     }
 
     @Background
@@ -278,6 +293,7 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
 
             }
         } catch (IOException e) {
+            E.manage(e);
             //TODO: how to handle background exceptions
             e.printStackTrace();
         }
@@ -330,6 +346,7 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
                 sendUnregistrationIdToBackend(removedId);
 
             } catch (IOException e) {
+                E.manage(e);
                 Log.e(TAG, e.getMessage());
                 logUnregister("ERROR UNREGISTERING");
                 e.printStackTrace();
@@ -364,6 +381,7 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
             afterInitBackgroundProcess();
 
         } catch (IOException e) {
+            E.manage(e);
             log(e.getMessage());
 
             e.printStackTrace();
@@ -371,10 +389,63 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
 
     }
 
-    private void retrievePendingGames() throws IOException {
-        pendingGames = gameController.retrievePendingGames();
+    private void retrievePendingGames() {
+        try {
+            pendingGames = gameController.retrievePendingGames();
+        } catch (IOException e) {
+            E.manage(e);
+            log(e.getMessage());
+            e.printStackTrace();
+        }
 
     }
+
+    @UiThread
+    void processPendingGames() {
+        if (pendingGames != null) {
+            List<String> pendingAux = new ArrayList<String>(pendingGames.size());
+            for (Match pendingGame : pendingGames) {
+                pendingAux.add(pendingGame.getHostName());
+            }
+            pendingGamesListView.setAdapter(new PendingGamesAdapter(this, R.layout.pendinggameitemlayout, pendingGames, gameController.getUser().getId()));
+
+            pendingGamesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+
+                @Override
+                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                    Match match = ((Match) adapterView.getItemAtPosition(i));
+                    //((PendingGamesAdapter) adapterView.getAdapter()).remove(match);
+                    //((PendingGamesAdapter) adapterView.getAdapter()).notifyDataSetChanged();
+                    gameController.setMatch(match);
+                    selectedGame = match.getGameType();
+                    switch (match.getStatus()) {
+                        case GameController.STATUS_IN_GAME:
+                            startGame();
+                            break;
+                        case GameController.STATUS_INVITATION_SENT:
+                            if (match.getHostUserId().equals(gameController.getUser().getId())) {
+                                toast("Esperando respuesta del rival");
+                            } else {
+                                incomingChallenge(match.getHostName(), String.valueOf(match.getId()), String.valueOf(match.getGameType()));
+                            }
+
+                            break;
+                        case GameController.STATUS_INVITATION_ACCEPTED:
+                            if (match.getHostUserId().equals(gameController.getUser().getId())) {
+                                startGame();
+                            } else {
+                                toast("Esperando inicio del juego");
+                            }
+
+                            break;
+                    }
+                }
+            });
+            log("Pending games= " + pendingGames.size());
+        }
+    }
+
 
     @UiThread
     public void afterInitBackgroundProcess() {
@@ -383,32 +454,15 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
             try {
                 gameController.processCommand(pendingCommand);
             } catch (IOException e) {
+                E.manage(e);
                 log(e.getMessage());
                 e.printStackTrace();
             }
             pendingCommand = null;
         }
 
-        if (pendingGames != null) {
-            List<String> pendingAux = new ArrayList<String>(pendingGames.size());
-            for (Match pendingGame : pendingGames) {
-                pendingAux.add(pendingGame.getHostName());
-            }
-            pendingGamesListView.setAdapter(new PendingGamesAdapter(this, R.layout.pendinggameitemlayout, pendingGames));
+        processPendingGames();
 
-            pendingGamesListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-
-                @Override
-                public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-                    Match match = ((Match) adapterView.getItemAtPosition(i));
-                    Toast.makeText(getApplicationContext(), match.getHostName(), Toast.LENGTH_LONG).show();
-                    ((PendingGamesAdapter) adapterView.getAdapter()).remove(match);
-                    ((PendingGamesAdapter) adapterView.getAdapter()).notifyDataSetChanged();
-                }
-            });
-            log("Pending games= " + pendingGames.size());
-        }
 
         createBangGameButton.setVisibility(View.VISIBLE);
         createKicksGameButton.setVisibility(View.VISIBLE);
@@ -427,6 +481,7 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
             registration.unregister(removedId).execute();
             log("sent unregistration to backend");
         } catch (IOException e) {
+            E.manage(e);
             log(e.getMessage());
 
             e.printStackTrace();
@@ -443,6 +498,7 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
             log("Sending invitation to match " + gameController.getMatchId() + " to user " + users.get(index).getName());
             gameController.createMatch(users.get(index), selectedGame);
         } catch (IOException e) {
+            E.manage(e);
             log(e.getMessage());
 
             e.printStackTrace();
@@ -496,19 +552,19 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
             numberSelectionDialogFragment.show(fm, "fragment_select_number");
 
         } catch (IOException e) {
+            E.manage(e);
             e.printStackTrace();
         }
     }
 
-    @Click(R.id.launchButton)
-    void startGameActivity() {
+    void startGame() {
         Intent myIntent = null;
         switch (selectedGame) {
             case GAME_BANG:
                 myIntent = new Intent(StartActivity.this, AndroidLauncher.class);
                 break;
             case GAME_KICKS:
-                myIntent = new Intent(StartActivity.this, GameActivity_.class);
+                myIntent = new Intent(StartActivity.this, KickGameActivity_.class);
                 break;
 
             default:
@@ -533,6 +589,7 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
         try {
             gameController.processCommand(command);
         } catch (IOException e) {
+            E.manage(e);
             log(e.getMessage());
         }
 
@@ -548,6 +605,7 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
             gameCountdown();
 
         } catch (Exception e) {
+            E.manage(e);
             e.printStackTrace();
             log(e.getMessage());
         }
@@ -559,6 +617,7 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
         try {
             gameCountdown();
         } catch (InterruptedException e) {
+            E.manage(e);
             e.printStackTrace();
             log(e.getMessage());
         }
@@ -571,7 +630,7 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
             Thread.sleep(1000);
             log(i + "");
         }
-        startGameActivity();
+        startGame();
     }
 
 
@@ -599,4 +658,9 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
         alert.show();
     }
 
+    @UiThread
+    void toast(String message) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
+
+    }
 }

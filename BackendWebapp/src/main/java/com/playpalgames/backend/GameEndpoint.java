@@ -48,12 +48,27 @@ public class GameEndpoint {
             LOG.info("turnData: " + turn.getTurnData());
             lastTurn = ofy().load().type(Turn.class).filter("matchId", turn.getMatchId()).order("-turnNumber").first().now();
             turn.setTurnNumber(lastTurn != null ? lastTurn.getTurnNumber() + 1 : 0);
-            ofy().save().entity(turn).now();
+            save(turn);
         }
 
-        //Notify opponent
         Match match = getById(turn.getMatchId(), Match.class);
+        LOG.info("match: " + match);
         Long opponentId = match.getHostUserId().equals(turn.getPlayerId()) ? match.getGuestUserId() : match.getHostUserId();
+        if (turn.isOpponentIsNext()) {
+            LOG.info("opponent: " + opponentId);
+            //Store nextTurnPlayerId to show on Pending games
+            match.setNextTurnPlayerId(opponentId);
+        } else {
+            match.setNextTurnPlayerId(turn.getPlayerId());
+        }
+        //if first turn change match state
+        if (lastTurn == null) {
+            match.setStatus(Match.STATUS_IN_GAME);
+        }
+        LOG.info("match2: " + match);
+        save(match);
+        LOG.info("match3: " + match);
+        //Notify opponent
         LOG.info("Notifiying turn to user: " + opponentId);
         sendMessage(COMMAND_TURN, findRegIdByUserId(opponentId));
         return turn;
@@ -65,13 +80,16 @@ public class GameEndpoint {
      * @return The match created
      */
     @ApiMethod(name = "createMatch", httpMethod = ApiMethod.HttpMethod.GET)
-    public Match createMatch(@Named("userId") Long userId, @Named("invitedUserId") Long invitedUserId, @Named("username") String username, @Named("gameType") int gameType) throws IOException {
+    public Match createMatch(@Named("userId") Long userId, @Named("invitedUserId") Long invitedUserId, @Named("invitedUserName") String invitedUserName, @Named("username") String username, @Named("gameType") int gameType) throws IOException {
         LOG.info("Calling createMatch method");
         Match match = new Match();
         match.setHostUserId(userId);
         match.setHostName(username);
+        match.setGuestUserId(invitedUserId);
+        match.setGuestName(invitedUserName);
         match.setStatus(Match.STATUS_INVITATION_SENT);
         match.setGameType(gameType);
+        match.setNextTurnPlayerId(userId);
         saveMatch(match);
         LOG.info("Match created with id " + match.getId());
         sendMessage(COMMAND_CHALLENGE + " " + username + " " + match.getId() + " " + match.gameType, findRegIdByUserId(invitedUserId));
@@ -108,6 +126,36 @@ public class GameEndpoint {
         LOG.info("ListTurns from " + from + " called");
         List<Turn> turns = ofy().load().type(Turn.class).filter("matchId", matchId).filter("turnNumber >", from).order("turnNumber").list();
         return turns.toArray(new Turn[turns.size()]);
+    }
+
+    @ApiMethod(name = "getLastTurn")
+    public Turn getLastTurn(@Named("matchId") Long matchId) {
+        LOG.info("Last turn called");
+        return ofy().load().type(Turn.class).filter("matchId", matchId).order("-turnNumber").first().now();
+
+    }
+
+
+    /**
+     * Register a device to the backend
+     */
+    @ApiMethod(name = "endMatch")
+    public void endMatch(@Named("matchId") Long matchId, @Named("isHost") boolean isHost) {
+        Match match = getById(matchId, Match.class);
+        switch (match.getStatus()) {
+            case Match.STATUS_IN_GAME:
+                match.setStatus(isHost ? Match.STATUS_HOST_FINISHED : Match.STATUS_GUEST_FINISHED);
+                break;
+            case Match.STATUS_GUEST_FINISHED:
+                match.setStatus(isHost ? Match.STATUS_FINISHED : Match.STATUS_GUEST_FINISHED);
+                break;
+            case Match.STATUS_HOST_FINISHED:
+                match.setStatus(isHost ? Match.STATUS_HOST_FINISHED : Match.STATUS_FINISHED);
+                break;
+            default:
+                LOG.severe("Finishing match in incorrect state: " + match.getStatus());
+        }
+        saveMatch(match);
     }
 
     /**
@@ -162,13 +210,24 @@ public class GameEndpoint {
      */
     @ApiMethod(name = "listGamesByPlayer")
     public CollectionResponse<Match> listGamesByPlayer(@Named("playerId") long playerId) {
-        List<PlayerGame> playerGames = ofy().load().type(PlayerGame.class).filter("playerId", playerId).list();
-        List<Match> matches = ofy().load().type(Match.class).filter("hostUserId", playerId).list();
-        List<Match> matchesGuest = ofy().load().type(Match.class).filter("guestUserId", playerId).list();
+        int[] statusHost = new int[]{
+                Match.STATUS_CREATED,
+                Match.STATUS_INVITATION_SENT,
+                Match.STATUS_INVITATION_ACCEPTED,
+                Match.STATUS_IN_GAME,
+                Match.STATUS_GUEST_FINISHED,
+        };
 
+
+        int[] statusGuest = new int[]{
+                Match.STATUS_INVITATION_SENT,
+                Match.STATUS_INVITATION_ACCEPTED,
+                Match.STATUS_IN_GAME,
+                Match.STATUS_HOST_FINISHED,
+        };
+        List<Match> matches = ofy().cache(false).load().type(Match.class).filter("hostUserId", playerId).filter("status IN", statusHost).list();
+        List<Match> matchesGuest = ofy().cache(false).load().type(Match.class).filter("guestUserId", playerId).filter("status IN", statusGuest).list();
         matches.addAll(matchesGuest);
-
-
         return CollectionResponse.<Match>builder().setItems(matches).build();
 
     }
@@ -226,7 +285,6 @@ public class GameEndpoint {
             }
         }
 
-
         if (result.getMessageId() != null) {
             LOG.info("Message<<< " + msg + " >>>sent to " + regId);
             String canonicalRegId = result.getCanonicalRegistrationId();
@@ -281,13 +339,6 @@ public class GameEndpoint {
     }
 
 
-    private void savePlayerGame(Long idUser, Long idMatch) {
-        PlayerGame playerGame = new PlayerGame(idUser, idMatch);
-        ofy().save().entity(playerGame).now();
-
-    }
-
-
     private User findUserByRegId(String regId) {
         return ofy().load().type(User.class).filter("regId", regId).first().now();
     }
@@ -302,6 +353,10 @@ public class GameEndpoint {
         if (users.size() > 0)
             ofy().delete().entities(users);
 
+    }
+
+    private void save(Object entity) {
+        ofy().save().entity(entity).now();
     }
 
     private User findUserById(Long id) {

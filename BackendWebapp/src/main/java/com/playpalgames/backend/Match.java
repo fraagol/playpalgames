@@ -10,12 +10,16 @@ import com.googlecode.objectify.annotation.Index;
 @Entity
 public class Match {
 
-    public static int STATUS_CREATED = 0;
-    public static int STATUS_INVITATION_SENT = 1;
-    public static int STATUS_INVITATION_ACCEPTED = 2;
-    public static int STATUS_IN_GAME = 3;
-    public static int STATUS_CANCELED = 4;
-    public static int STATUS_FINISHED = 5;
+
+    //DONT MODIFY WITHOUT MODIFYING GameController!!!!!!!!!!!
+    public static final int STATUS_CREATED = 0;
+    public static final int STATUS_INVITATION_SENT = 1;
+    public static final int STATUS_INVITATION_ACCEPTED = 2;
+    public static final int STATUS_IN_GAME = 3;
+    public static final int STATUS_CANCELED = 4;
+    public static final int STATUS_HOST_FINISHED = 5;
+    public static final int STATUS_GUEST_FINISHED = 6;
+    public static final int STATUS_FINISHED = 7;
 
 
     @Id
@@ -36,9 +40,19 @@ public class Match {
 
     String guestName;
 
+    long nextTurnPlayerId;
+
 
     public Match() {
         status = STATUS_CREATED;
+    }
+
+    public long getNextTurnPlayerId() {
+        return nextTurnPlayerId;
+    }
+
+    public void setNextTurnPlayerId(long nextTurnPlayerId) {
+        this.nextTurnPlayerId = nextTurnPlayerId;
     }
 
     public Match(Integer status) {
@@ -107,6 +121,11 @@ public class Match {
         return "Match{" +
                 "id=" + id +
                 ", status=" + status +
+                ", hostUserId =" + hostUserId +
+                ",guestUserId =" + guestUserId +
+                ",hostName =" + hostName +
+                ",guestName =" + guestName +
+                ",nextTurnPlayerId =" + nextTurnPlayerId +
                 '}';
     }
 }

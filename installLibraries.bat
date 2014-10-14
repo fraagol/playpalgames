@@ -1,1 +1,2 @@
 gradlew BackendWebapp:appengineEndpointsInstallClientLibs 
+pause
