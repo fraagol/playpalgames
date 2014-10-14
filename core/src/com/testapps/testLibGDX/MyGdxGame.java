@@ -22,6 +22,8 @@ public class MyGdxGame implements ApplicationListener, GameClient {
 	public void create () {
         batch = new SpriteBatch();
         gameController= GameController.getInstance();
+        gameController.initMatch();
+        gameController.addGameClientListener(this);
         this.battleField = new BattleFieldController(gameController);
         battleField.create();
 
