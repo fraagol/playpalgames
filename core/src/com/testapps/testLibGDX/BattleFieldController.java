@@ -38,18 +38,20 @@ public class BattleFieldController {
     private SelectRechargeState selectRechargeState;
     private Lives lives;
     private Bullets bullets;
+    private BackGround backGround;
 
     public BattleFieldController(GameController gameController) {
-        this.cowboyFactory = new CowboyFactory();
+        this.cowboyFactory = new CowboyFactory(gameController.isHost());
         this.cowboysBand = new CowboysBand();
         this.gameButtons = new GameButtons(this);
         this.lives = new Lives();
         this.bullets = new Bullets();
         this.gameController = gameController;
+        this.backGround = new BackGround();
     }
 
     public void create() {
-        createCowboys();
+        createCowboys(this.gameController.isHost());
 
         GameBoard.initBoard(this.cowboysBand);
 
@@ -59,19 +61,22 @@ public class BattleFieldController {
         selectShootState = new SelectShootState(gameButtons, cowboysBand, bullets);
         selectRechargeState = new SelectRechargeState(cowboysBand, bullets);
 
-
         initGameState.init();
         state = initGameState;
     }
 
-    private void createCowboys() {
+    private void createCowboys(Boolean amIHost) {
         Cowboy cowboyI = this.cowboyFactory.createMyPlayer();
         Cowboy cowboyOther = this.cowboyFactory.createEnemy();
         this.cowboysBand.addCowboyToBand(cowboyI);
         this.cowboysBand.addCowboyToBand(cowboyOther);
     }
 
+
+
+
     public void render(SpriteBatch batch, float elapsedTime) {
+        backGround.render(batch);
         state.render(batch);
         cowboysBand.render(batch);
         gameButtons.render(batch);

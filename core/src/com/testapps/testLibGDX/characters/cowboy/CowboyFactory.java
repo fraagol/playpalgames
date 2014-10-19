@@ -8,12 +8,19 @@ import com.testapps.testLibGDX.characters.cowboy.views.CowboyViewMainPlayer;
 
 public class CowboyFactory {
 
-    private int currentID;
     private Texture cowboyTexture;
+    private int myPlayerID;
+    private int enemyID;
 
-    public CowboyFactory() {
-        currentID = 2; //ID 1 is reserved for player's cowboy
+    public CowboyFactory(boolean amIHost) {
         this.cowboyTexture = new Texture(Gdx.files.internal("cowboyAndando.png"));
+        if(amIHost) {
+            myPlayerID = 1;
+            enemyID = 2;
+        } else {
+            myPlayerID = 2;
+            enemyID = 1;
+        }
     }
 
     public void dispose(){
@@ -22,14 +29,13 @@ public class CowboyFactory {
 
     public Cowboy createMyPlayer() {
         CowboyView view = new CowboyViewMainPlayer(this.cowboyTexture);
-        Cowboy cowboy = createCowboy(view, 1);
+        Cowboy cowboy = createCowboy(view, myPlayerID);
         return cowboy;
     }
 
     public Cowboy createEnemy() {
         CowboyView view = new CowboyView(this.cowboyTexture);
-        Cowboy cowboy = createCowboy(view, currentID);
-        currentID++;
+        Cowboy cowboy = createCowboy(view, enemyID);
         return cowboy;
     }
 
