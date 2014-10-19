@@ -99,11 +99,12 @@ public class GameControllerImpl extends GameController {
         switch (command[0].charAt(0)) {
             case 'A'://challenge Accepted
 
-                setHost(true);
-                setMyTurn(true);
-                match.setId(Long.valueOf(command[1]));
-                challengesClient.challengeAccepted();
+                if(match!=null &&match.getId().equals(Long.valueOf(command[1]))) {
+                    setHost(true);
+                    setMyTurn(true);
 
+                    challengesClient.challengeAccepted();
+                }
                 break;
             case 'C': //Challenge received
                 challengesClient.incomingChallenge(command[1], command[2], command[3]);
@@ -111,6 +112,8 @@ public class GameControllerImpl extends GameController {
             case 'T'://Turns availables
                 if (state == CONTROLLER_STATE_IN_GAME) {
                     getTurnsFromServer();
+                }else{
+                    challengesClient.notifyNewTurn();
                 }
                 break;
         }

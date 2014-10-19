@@ -7,4 +7,6 @@ public interface ChallengesClient {
     public void incomingChallenge(final String challengerName, final String matchId, String gameType);
 
     public void challengeAccepted();
+
+    void notifyNewTurn();
 }

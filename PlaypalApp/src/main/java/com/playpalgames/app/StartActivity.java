@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarActivity;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -50,7 +51,7 @@ import java.util.List;
 import java.util.Random;
 
 @EActivity(R.layout.activity_start)
-public class StartActivity extends ActionBarActivity implements ChallengesClient, NumberSelectionDialogFragment.NumberDialogListener {
+public class StartActivity extends ActionBarActivity implements ChallengesClient, NumberSelectionDialogFragment.NumberDialogListener, SwipeRefreshLayout.OnRefreshListener {
 
     public static final String DISPLAY_MESSAGE_ACTION = "com.playpalgames.app.DISPLAY_MESSAGE_ACTION";
 
@@ -93,7 +94,7 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
 
     String pendingCommand = null;
 
-    List<Match> pendingGames;
+    List<Match> pendingGames = new ArrayList<Match>();
 
     @ViewById(R.id.serverCheckbox)
     CheckBox serverCheckBox;
@@ -115,6 +116,9 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
 
     @ViewById(R.id.pendingGamesListView)
     ListView pendingGamesListView;
+
+    @ViewById(R.id.swipe_container)
+    SwipeRefreshLayout swipeLayout;
 
     SharedPreferences preferences;
 
@@ -160,6 +164,7 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
         }
         initGcm();
 
+
     }
 
     @Override
@@ -201,6 +206,16 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
         foreground = false;
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        foreground = true;
+        if (gameController != null) {
+            swipeLayout.setRefreshing(true);
+            reloadPendingGames();
+        }
+    }
+
 
     private void initPreferences() {
         preferences = getSharedPreferences(StartActivity.class.getSimpleName(), Context.MODE_PRIVATE);
@@ -220,6 +235,13 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
     void afterViews() {
         populateFieldsFromPreferences();
         logTextView.setMovementMethod(new ScrollingMovementMethod());
+
+
+        swipeLayout.setOnRefreshListener(this);
+        swipeLayout.setColorScheme(android.R.color.holo_blue_bright,
+                android.R.color.holo_green_light,
+                android.R.color.holo_orange_light,
+                android.R.color.holo_red_light);
 
     }
 
@@ -265,19 +287,21 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
         return getPreferenceBoolean(PREFERENCE_PENALTY_KICKS);
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
-        foreground = true;
-        if (gameController != null) {
-            retrievePendingGamesOnResume();
-        }
-    }
+
+
 
     @Background
-    void retrievePendingGamesOnResume() {
+    void reloadPendingGames(){
+
         retrievePendingGames();
+        notifyPendingGamesAdapter();
+    }
+
+    @UiThread
+    void notifyPendingGamesAdapter(){
         processPendingGames();
+        ((PendingGamesAdapter)pendingGamesListView.getAdapter()).notifyDataSetChanged();
+        swipeLayout.setRefreshing(false);
     }
 
     @Background
@@ -391,7 +415,9 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
 
     private void retrievePendingGames() {
         try {
-            pendingGames = gameController.retrievePendingGames();
+            pendingGames.clear();
+            pendingGames.addAll(gameController.retrievePendingGames());
+
         } catch (IOException e) {
             E.manage(e);
             log(e.getMessage());
@@ -403,9 +429,9 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
     @UiThread
     void processPendingGames() {
         if (pendingGames != null) {
-            List<String> pendingAux = new ArrayList<String>(pendingGames.size());
+
             for (Match pendingGame : pendingGames) {
-                pendingAux.add(pendingGame.getHostName());
+            log(pendingGame.toString());
             }
             pendingGamesListView.setAdapter(new PendingGamesAdapter(this, R.layout.pendinggameitemlayout, pendingGames, gameController.getUser().getId()));
 
@@ -439,6 +465,10 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
                             }
 
                             break;
+
+                        case GameController.STATUS_HOST_FINISHED:
+                        case GameController.STATUS_GUEST_FINISHED:
+                            startGame();
                     }
                 }
             });
@@ -623,6 +653,15 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
         }
     }
 
+    @Override
+    public void notifyNewTurn() {
+        if (gameController != null) {
+            swipeLayout.setRefreshing(true);
+            reloadPendingGames();
+        }
+    }
+
+
     void gameCountdown() throws InterruptedException {
 
         log("el juego comenzará en... ");
@@ -658,9 +697,17 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
         alert.show();
     }
 
+
+
     @UiThread
     void toast(String message) {
         Toast.makeText(this, message, Toast.LENGTH_SHORT).show();
 
+    }
+
+    @Override
+    public void onRefresh() {
+        toast("refreshing...");
+        reloadPendingGames();
     }
 }

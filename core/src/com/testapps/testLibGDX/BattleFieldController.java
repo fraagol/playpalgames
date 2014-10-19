@@ -107,6 +107,7 @@ public class BattleFieldController {
             gameController.sendTurn(new TurnAction(buttonSubscribed.getAction(),
                     cowboysBand.getMyCowboy().getID(),
                     buttonSubscribed.getBoardPos()), null, false);
+            gameController.setMyTurn(false);
         } catch (IOException e) {
             e.printStackTrace();
         }

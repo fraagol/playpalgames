@@ -8,6 +8,7 @@ import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.config.ApiNamespace;
 import com.google.api.server.spi.response.CollectionResponse;
+import com.googlecode.objectify.Objectify;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -15,8 +16,6 @@ import java.util.List;
 import java.util.logging.Logger;
 
 import javax.inject.Named;
-
-import static com.playpalgames.backend.OfyService.ofy;
 
 /**
  * An endpoint class we are exposing
@@ -46,7 +45,7 @@ public class GameEndpoint {
         Turn lastTurn;
         synchronized (LOCK) {
             LOG.info("turnData: " + turn.getTurnData());
-            lastTurn = ofy().load().type(Turn.class).filter("matchId", turn.getMatchId()).order("-turnNumber").first().now();
+            lastTurn = ofy().cache(false).load().type(Turn.class).filter("matchId", turn.getMatchId()).order("-turnNumber").first().now();
             turn.setTurnNumber(lastTurn != null ? lastTurn.getTurnNumber() + 1 : 0);
             save(turn);
         }
@@ -90,7 +89,8 @@ public class GameEndpoint {
         match.setStatus(Match.STATUS_INVITATION_SENT);
         match.setGameType(gameType);
         match.setNextTurnPlayerId(userId);
-        saveMatch(match);
+        match.setCreated(Utils.now());
+        save(match);
         LOG.info("Match created with id " + match.getId());
         sendMessage(COMMAND_CHALLENGE + " " + username + " " + match.getId() + " " + match.gameType, findRegIdByUserId(invitedUserId));
 
@@ -103,8 +103,9 @@ public class GameEndpoint {
         Match match = getById(matchId, Match.class);
         match.setGuestUserId(userId);
         match.setGuestName(username);
+
         match.setStatus(Match.STATUS_INVITATION_ACCEPTED);
-        saveMatch(match);
+        save(match);
         //Send accepted to Match Creator
         try {
             sendMessage(COMMAND_ACCEPT_CHALLENGE + " " + matchId + " " + userId, findRegIdByUserId(match.getHostUserId()));
@@ -117,21 +118,21 @@ public class GameEndpoint {
     @ApiMethod(name = "listTurns")
     public Turn[] listTurns(@Named("matchId") Long matchId) {
         LOG.info("ListTurns called");
-        List<Turn> turns = ofy().load().type(Turn.class).filter("matchId", matchId).order("-turnNumber").list();
+        List<Turn> turns = ofy().cache(false).load().type(Turn.class).filter("matchId", matchId).order("-turnNumber").list();
         return turns.toArray(new Turn[turns.size()]);
     }
 
     @ApiMethod(name = "listTurnsFrom")
     public Turn[] listTurnsFrom(@Named("matchId") Long matchId, @Named("from") Long from) {
         LOG.info("ListTurns from " + from + " called");
-        List<Turn> turns = ofy().load().type(Turn.class).filter("matchId", matchId).filter("turnNumber >", from).order("turnNumber").list();
+        List<Turn> turns = ofy().cache(false).load().type(Turn.class).filter("matchId", matchId).filter("turnNumber >", from).order("turnNumber").list();
         return turns.toArray(new Turn[turns.size()]);
     }
 
     @ApiMethod(name = "getLastTurn")
     public Turn getLastTurn(@Named("matchId") Long matchId) {
         LOG.info("Last turn called");
-        return ofy().load().type(Turn.class).filter("matchId", matchId).order("-turnNumber").first().now();
+        return ofy().cache(false).load().type(Turn.class).filter("matchId", matchId).order("-turnNumber").first().now();
 
     }
 
@@ -155,7 +156,7 @@ public class GameEndpoint {
             default:
                 LOG.severe("Finishing match in incorrect state: " + match.getStatus());
         }
-        saveMatch(match);
+        save(match);
     }
 
     /**
@@ -196,7 +197,7 @@ public class GameEndpoint {
      */
     @ApiMethod(name = "listDevices")
     public CollectionResponse<User> listDevices(/*@Named("count") int count*/) {
-        List<User> records = ofy().load().type(User.class)/*.limit(count)*/.list();
+        List<User> records = ofy().cache(false).load().type(User.class)/*.limit(count)*/.list();
 
         return CollectionResponse.<User>builder().setItems(records).build();
 
@@ -228,6 +229,9 @@ public class GameEndpoint {
         List<Match> matches = ofy().cache(false).load().type(Match.class).filter("hostUserId", playerId).filter("status IN", statusHost).list();
         List<Match> matchesGuest = ofy().cache(false).load().type(Match.class).filter("guestUserId", playerId).filter("status IN", statusGuest).list();
         matches.addAll(matchesGuest);
+        for (Match m: matches){
+            LOG.info(matches.toString());
+        }
         return CollectionResponse.<Match>builder().setItems(matches).build();
 
     }
@@ -239,7 +243,7 @@ public class GameEndpoint {
      */
     @ApiMethod(name = "listOthersDevices")
     public CollectionResponse<User> listOthersDevices(@Named("id") Long id) {
-        List<User> records = ofy().load().type(User.class)/*.limit(count)*/.list();
+        List<User> records = ofy().cache(false).load().type(User.class)/*.limit(count)*/.list();
         LOG.info("records size: " + records.size());
         Iterator<User> it = records.iterator();
         while (it.hasNext()) {
@@ -313,7 +317,7 @@ public class GameEndpoint {
 
         Sender sender = new Sender(API_KEY);
         Message msg = new Message.Builder().addData("message", "ping from " + senderNumber).build();
-        List<User> records = ofy().load().type(User.class).list();
+        List<User> records = ofy().cache(false).load().type(User.class).list();
         for (User record : records) {
             Result result = sender.send(msg, record.getRegId(), 5);
             if (result.getMessageId() != null) {
@@ -340,7 +344,7 @@ public class GameEndpoint {
 
 
     private User findUserByRegId(String regId) {
-        return ofy().load().type(User.class).filter("regId", regId).first().now();
+        return ofy().cache(false).load().type(User.class).filter("regId", regId).first().now();
     }
 
     /**
@@ -357,11 +361,13 @@ public class GameEndpoint {
 
     private void save(Object entity) {
         ofy().save().entity(entity).now();
+        LOG.info("Saved ->"+entity);
+        clearCache();
     }
 
     private User findUserById(Long id) {
         LOG.info("findUserById: " + id);
-        return ofy().load().type(User.class).id(id).now();
+        return ofy().cache(false).load().type(User.class).id(id).now();
     }
 
     private String findRegIdByUserId(Long id) {
@@ -372,11 +378,18 @@ public class GameEndpoint {
 
     private <T> T getById(Long id, Class<T> type) {
 
-        return ofy().load().type(type).id(id).now();
+        return ofy().cache(false).load().type(type).id(id).now();
     }
 
-    private void saveMatch(Match match) {
-        ofy().save().entity(match).now();
+
+
+    private void clearCache(){
+        ofy().clear();
+    }
+
+    private Objectify ofy(){
+        ofy().clear();
+        return OfyService.ofy().cache(false);
     }
 
 }

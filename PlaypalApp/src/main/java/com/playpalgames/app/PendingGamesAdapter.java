@@ -48,6 +48,9 @@ public class PendingGamesAdapter extends ArrayAdapter<Match> {
             case GameController.STATUS_INVITATION_ACCEPTED:
                 turnUserTextView.setText(match.getHostUserId().equals(userId) ? "Desafío aceptado" : "Esperando inicio");
                 break;
+            case GameController.STATUS_GUEST_FINISHED:
+            case GameController.STATUS_HOST_FINISHED:
+                turnUserTextView.setText("Finalizado");
         }
         ImageView imageView = (ImageView) convertView.findViewById(R.id.ivUserIcon);
         imageView.setImageResource(StartActivity.GAME_IMAGES_ID[match.getGameType()]);

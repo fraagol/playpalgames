@@ -19,7 +19,9 @@ public abstract class GameController {
     public static final int STATUS_INVITATION_ACCEPTED = 2;
     public static final int STATUS_IN_GAME = 3;
     public static final int STATUS_CANCELED = 4;
-    public static final int STATUS_FINISHED = 5;
+    public static final int STATUS_HOST_FINISHED = 5;
+    public static final int STATUS_GUEST_FINISHED = 6;
+    public static final int STATUS_FINISHED = 7;
     static final int CONTROLLER_STATE_NOT_IN_GAME = 0;
     static final int CONTROLLER_STATE_IN_GAME = 1;
 

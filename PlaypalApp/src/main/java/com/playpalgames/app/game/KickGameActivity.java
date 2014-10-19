@@ -101,6 +101,7 @@ public class KickGameActivity extends Activity implements GameClient {
     boolean waitingTurn = false;
     private ArrayList<Integer> localGoals = new ArrayList<Integer>();
     private ArrayList<Integer> remoteGoals = new ArrayList<Integer>();
+    private boolean actionAllowed=false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -329,11 +330,17 @@ public class KickGameActivity extends Activity implements GameClient {
 
 
     @Background
-    void setAction(int direction) {
+    void backgroundAction(int direction) {
         try {
             switch (state) {
                 case STATE_SHOOTER_LOOK:
                     log("Miras a la " + translate(direction) + " ¿y hacia donde tiras?");
+                    try {
+                        Thread.currentThread().sleep(500);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    enableButtons(true);
                     localTurn.setLook(direction);
                     state = STATE_SHOOTER_SHOOT;
 
@@ -573,6 +580,7 @@ public class KickGameActivity extends Activity implements GameClient {
 
     @UiThread
     void enableButtons(boolean enable) {
+        actionAllowed=enable;
         waitingTurn = !enable;
         leftButton.setVisibility(enable ? View.VISIBLE : View.INVISIBLE);
         rightButton.setVisibility(enable ? View.VISIBLE : View.INVISIBLE);
@@ -631,12 +639,32 @@ public class KickGameActivity extends Activity implements GameClient {
 
     @Click
     void leftButton() {
-        setAction(LEFT);
+        enableButtons(false);
+        if (actionAllowed) {
+            setAction(LEFT);
+        }
     }
 
     @Click
     void rightButton() {
-        setAction(RIGHT);
+
+        enableButtons(false);
+        if (actionAllowed) {
+            setAction(RIGHT);
+        }
+    }
+
+    /**
+     *
+     * Avoid two button clicks at the same time
+     * @param a
+     */
+     void setAction(int a){
+         synchronized(this) {
+             if (actionAllowed) {
+                 backgroundAction(a);
+             }
+         }
     }
 
     @Override

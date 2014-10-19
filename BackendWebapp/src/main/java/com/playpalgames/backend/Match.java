@@ -42,6 +42,10 @@ public class Match {
 
     long nextTurnPlayerId;
 
+    String created;
+
+    String updated;
+
 
     public Match() {
         status = STATUS_CREATED;
@@ -115,6 +119,22 @@ public class Match {
         this.gameType = gameType;
     }
 
+    public String getCreated() {
+        return created;
+    }
+
+    public void setCreated(String created) {
+        this.created = created;
+    }
+
+    public String getUpdated() {
+        return updated;
+    }
+
+    public void setUpdated(String updated) {
+        this.updated = updated;
+    }
+
 
     @Override
     public String toString() {
@@ -127,5 +147,6 @@ public class Match {
                 ",guestName =" + guestName +
                 ",nextTurnPlayerId =" + nextTurnPlayerId +
                 '}';
+
     }
 }
