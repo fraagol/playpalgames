@@ -416,7 +416,10 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
     private void retrievePendingGames() {
         try {
             pendingGames.clear();
-            pendingGames.addAll(gameController.retrievePendingGames());
+           List<Match> matchList = gameController.retrievePendingGames();
+            if (matchList!=null) {
+                pendingGames.addAll(matchList);
+            }
 
         } catch (IOException e) {
             E.manage(e);
