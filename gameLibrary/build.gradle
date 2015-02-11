@@ -7,7 +7,7 @@ repositories {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-      compile ('com.playpalgames.backend:gameEndpoint:v1-1.19.0-SNAPSHOT') {
+      compile ('com.playpalgames.backend:gameEndpoint:v1-1.19.1-SNAPSHOT') {
           exclude (group: 'org.apache.httpcomponents', module: 'httpclient')
       }
     //compile project(path: ':BackendWebapp', configuration: 'endpoints')
