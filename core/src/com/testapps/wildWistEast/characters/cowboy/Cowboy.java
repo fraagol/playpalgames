@@ -16,7 +16,6 @@ public class Cowboy {
 
     private float time = 0;
 
-    //final private float speed = 4f;
     final private float speed = 100f;
     private boolean moving = false;
     private Vector2 moveTo;
