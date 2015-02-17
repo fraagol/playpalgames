@@ -16,7 +16,8 @@ public class Cowboy {
 
     private float time = 0;
 
-    final private float speed = 4f;
+    //final private float speed = 4f;
+    final private float speed = 100f;
     private boolean moving = false;
     private Vector2 moveTo;
     private Integer moveToBoardPosition;
@@ -33,7 +34,7 @@ public class Cowboy {
         if(this.moving)
         {
             time += Gdx.graphics.getDeltaTime();
-            updatePos(time);
+            updatePos(Gdx.graphics.getDeltaTime());
             if(this.moving) {
                 this.view.updateWalkingAnimation(this.currentDirection);
             }
