@@ -6,10 +6,15 @@ import com.badlogic.gdx.utils.Array;
 import java.util.HashMap;
 
 public class CowboysBand {
-    HashMap<Integer, Cowboy> cowboysControllers;
+    private HashMap<Integer, Cowboy> cowboysControllers;
+    private Integer myPlayerID;
 
     public CowboysBand() {
         cowboysControllers = new HashMap<Integer, Cowboy>();
+    }
+
+    public void setMyPlayerID(int id) {
+        this.myPlayerID = id;
     }
 
     public void addCowboyToBand(Cowboy cowboy){
@@ -17,7 +22,7 @@ public class CowboysBand {
     }
 
     public Cowboy getMyCowboy(){
-        return this.cowboysControllers.get(1);
+        return this.cowboysControllers.get(myPlayerID);
     }
 
     public Cowboy getCowboy(Integer id){
@@ -35,7 +40,7 @@ public class CowboysBand {
         Array<Cowboy> enemies = new Array<Cowboy>();
         for(Cowboy cowboy : this.cowboysControllers.values())
         {
-            if(cowboy.getID() != 1)
+            if(cowboy.getID() != myPlayerID)
             {
                 enemies.add(cowboy);
             }

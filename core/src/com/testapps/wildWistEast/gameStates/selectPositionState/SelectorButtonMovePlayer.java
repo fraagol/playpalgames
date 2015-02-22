@@ -4,7 +4,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.testapps.wildWistEast.GameBoard;
-import com.testapps.wildWistEast.TurnAction;
+import com.testapps.wildWistEast.turn.TurnAction;
 import com.testapps.wildWistEast.buttons.IButtonsSubscribed;
 
 public class SelectorButtonMovePlayer implements IButtonsSubscribed {
