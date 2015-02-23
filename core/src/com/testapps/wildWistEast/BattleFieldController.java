@@ -61,8 +61,6 @@ public class BattleFieldController {
 
         initGameState.init();
         state = initGameState;
-
-        sendGameConfigurationToOtherPlayers();
     }
 
     private void createCowboys(Boolean amIHost) {
@@ -72,17 +70,6 @@ public class BattleFieldController {
         this.cowboysBand.addCowboyToBand(cowboyOther);
         this.cowboysBand.setMyPlayerID(cowboyI.getID());
     }
-
-    private void sendGameConfigurationToOtherPlayers() {
-        if(!gameController.isHost()) {
-            return;
-        }
-
-
-    }
-
-
-
 
     public void render(SpriteBatch batch, float elapsedTime) {
         backGround.render(batch);
