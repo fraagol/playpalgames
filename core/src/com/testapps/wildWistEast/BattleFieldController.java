@@ -50,7 +50,7 @@ public class BattleFieldController {
         this.gameController = gameController;
         this.backGround = new BackGround();
 
-        createCowboys(this.gameController.isHost());
+        createCowboys();
         GameBoard.initBoard(this.cowboysBand);
 
         initGameState = new InitGameState(cowboysBand);
@@ -63,7 +63,7 @@ public class BattleFieldController {
         state = initGameState;
     }
 
-    private void createCowboys(Boolean amIHost) {
+    private void createCowboys() {
         Cowboy cowboyI = this.cowboyFactory.createMyPlayer();
         Cowboy cowboyOther = this.cowboyFactory.createEnemy();
         this.cowboysBand.addCowboyToBand(cowboyI);
