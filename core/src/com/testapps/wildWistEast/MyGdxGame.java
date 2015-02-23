@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.playpalgames.library.GameClient;
 import com.playpalgames.library.GameController;
+import com.testapps.wildWistEast.turn.TurnAction;
 
 
 public class MyGdxGame implements ApplicationListener, GameClient {
@@ -25,7 +26,6 @@ public class MyGdxGame implements ApplicationListener, GameClient {
         gameController.initMatch();
         gameController.addGameClientListener(this);
         this.battleField = new BattleFieldController(gameController);
-        battleField.create();
 
         //TODO: set up game(cowboys position, first player to move...) according to player's role: host or guest
         boolean amIHost= gameController.isHost();

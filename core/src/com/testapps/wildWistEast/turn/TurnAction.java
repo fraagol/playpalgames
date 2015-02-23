@@ -1,4 +1,4 @@
-package com.testapps.wildWistEast;
+package com.testapps.wildWistEast.turn;
 
 import com.playpalgames.library.GameTurn;
 

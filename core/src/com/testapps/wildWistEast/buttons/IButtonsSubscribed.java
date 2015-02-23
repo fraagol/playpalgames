@@ -1,7 +1,7 @@
 package com.testapps.wildWistEast.buttons;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.testapps.wildWistEast.TurnAction;
+import com.testapps.wildWistEast.turn.TurnAction;
 
 public interface IButtonsSubscribed {
 

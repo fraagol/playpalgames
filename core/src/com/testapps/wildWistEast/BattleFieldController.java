@@ -21,6 +21,7 @@ import com.testapps.wildWistEast.gameStates.selectPositionState.SelectPositionSt
 import com.testapps.wildWistEast.gameStates.selectPositionState.SelectorButtonMovePlayer;
 import com.testapps.wildWistEast.gameStates.selectRechargeState.SelectRechargeState;
 import com.testapps.wildWistEast.gameStates.selectShootState.SelectShootState;
+import com.testapps.wildWistEast.turn.TurnAction;
 
 import java.io.IOException;
 
@@ -48,11 +49,8 @@ public class BattleFieldController {
         this.bullets = new Bullets();
         this.gameController = gameController;
         this.backGround = new BackGround();
-    }
 
-    public void create() {
-        createCowboys(this.gameController.isHost());
-
+        createCowboys();
         GameBoard.initBoard(this.cowboysBand);
 
         initGameState = new InitGameState(cowboysBand);
@@ -65,15 +63,13 @@ public class BattleFieldController {
         state = initGameState;
     }
 
-    private void createCowboys(Boolean amIHost) {
+    private void createCowboys() {
         Cowboy cowboyI = this.cowboyFactory.createMyPlayer();
         Cowboy cowboyOther = this.cowboyFactory.createEnemy();
         this.cowboysBand.addCowboyToBand(cowboyI);
         this.cowboysBand.addCowboyToBand(cowboyOther);
+        this.cowboysBand.setMyPlayerID(cowboyI.getID());
     }
-
-
-
 
     public void render(SpriteBatch batch, float elapsedTime) {
         backGround.render(batch);
@@ -118,16 +114,6 @@ public class BattleFieldController {
         }
     }
 
-    public void dispose() {
-        initGameState.dispose();
-        mainState.dispose();
-        selectPositionState.dispose();
-
-        cowboyFactory.dispose();
-        cowboysBand.dispose();
-        gameButtons.dispose();
-    }
-
     public void handleNewTurn(TurnAction turnAction) {
         if(turnAction.getAction() == TurnAction.Action.MOVE) {
             cowboysBand.getCowboy(turnAction.getPlayer()).moveTo(turnAction.getTarget());
@@ -138,5 +124,15 @@ public class BattleFieldController {
 
         state = this.mainState;
         state.init();
+    }
+
+    public void dispose() {
+        initGameState.dispose();
+        mainState.dispose();
+        selectPositionState.dispose();
+
+        cowboyFactory.dispose();
+        cowboysBand.dispose();
+        gameButtons.dispose();
     }
 }
