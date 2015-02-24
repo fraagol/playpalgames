@@ -17,6 +17,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.CheckBox;
 import android.widget.ImageButton;
@@ -144,6 +145,7 @@ public class StartActivity extends ActionBarActivity implements ChallengesClient
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ACRA.init(this.getApplication());
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         foreground = true;
         context = getApplicationContext();
         registerReceiver(mHandleMessageReceiver,
