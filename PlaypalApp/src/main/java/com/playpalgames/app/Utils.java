@@ -1,15 +1,15 @@
 package com.playpalgames.app;
 
 
-        import java.util.regex.Pattern;
-
         import android.accounts.Account;
-        import android.accounts.AccountManager;
-        import android.app.Activity;
-        import android.content.Context;
-        import android.content.Intent;
-        import android.telephony.TelephonyManager;
-        import android.util.Patterns;
+import android.accounts.AccountManager;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.telephony.TelephonyManager;
+import android.util.Patterns;
+
+import java.util.regex.Pattern;
 
 public class Utils {
 
@@ -33,7 +33,7 @@ public class Utils {
         Pattern emailPattern = Patterns.EMAIL_ADDRESS; // API level 8+
         Account[] accounts = AccountManager.get(context).getAccounts();
         for (Account account : accounts) {
-            if (emailPattern.matcher(account.name).matches()) {
+            if (emailPattern.matcher(account.name).matches() && account.type.startsWith("com.google")) {
                 return account.name;
 
             }
