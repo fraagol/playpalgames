@@ -543,7 +543,7 @@ public class KickGameActivity extends Activity implements GameClient {
                 toast("Esperando...");
             }
         } catch (IOException e) {
-            E.manage(e);
+            E.manage(new Exception("Error at checkForTurns", e));
             toast(e.getMessage());
         }
 

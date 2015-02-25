@@ -170,8 +170,19 @@ public class GameEndpoint {
             LOG.info("Device " + regId + " already registered, skipping register");
             return existingUser;
         }
-        ofy().save().entity(user).now();
-        LOG.info(user.toString());
+        existingUser = findUserByName(user.getName());
+        if (existingUser != null) {
+            //if users exists with same name, update that user
+            existingUser.setPhoneNumber(user.getPhoneNumber());
+            existingUser.setRegId(user.getRegId());
+            LOG.info("Updating user: " + user.toString());
+            save(existingUser);
+        } else {
+            ofy().save().entity(user).now();
+            LOG.info("New user: " + user.toString());
+
+        }
+
         return user;
     }
 
@@ -262,7 +273,6 @@ public class GameEndpoint {
 
 
     /**
-     * Send to the first 10 devices (You can modify this to send to any number of devices or a specific device)
      *
      * @param message The message to send
      */
@@ -347,6 +357,11 @@ public class GameEndpoint {
         return ofy().cache(false).load().type(User.class).filter("regId", regId).first().now();
     }
 
+
+    private User findUserByName(String name) {
+        return ofy().cache(false).load().type(User.class).filter("name", name).first().now();
+    }
+
     /**
      * Delete existing users with same phone number
      *
@@ -384,11 +399,11 @@ public class GameEndpoint {
 
 
     private void clearCache(){
-        ofy().clear();
+        OfyService.ofy().clear();
     }
 
     private Objectify ofy(){
-        ofy().clear();
+        clearCache();
         return OfyService.ofy().cache(false);
     }
 
