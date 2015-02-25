@@ -121,6 +121,9 @@ public class BattleFieldController {
         else if(turnAction.getAction() == TurnAction.Action.SHOOT) {
             cowboysBand.getCowboy(turnAction.getPlayer()).shootTo(turnAction.getTarget());
         }
+        else if(turnAction.getAction() == TurnAction.Action.RELOAD) {
+            cowboysBand.getCowboy(turnAction.getPlayer()).rechargeGun();
+        }
 
         state = this.mainState;
         state.init();
