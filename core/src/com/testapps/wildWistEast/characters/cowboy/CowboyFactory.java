@@ -23,10 +23,6 @@ public class CowboyFactory {
         }
     }
 
-    public void dispose(){
-        cowboyTexture.dispose();
-    }
-
     public Cowboy createMyPlayer() {
         CowboyView view = new CowboyViewMainPlayer(this.cowboyTexture);
         Cowboy cowboy = createCowboy(view, myPlayerID);
@@ -41,5 +37,9 @@ public class CowboyFactory {
 
     private Cowboy createCowboy(CowboyView view, int id){
         return new Cowboy(view, id);
+    }
+
+    public void dispose(){
+        cowboyTexture.dispose();
     }
 }

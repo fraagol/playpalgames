@@ -29,8 +29,9 @@ public class InitGameState implements IGameStates{
 
     @Override
     public void init() {
-        Cowboy cowboy1 = cowboys.getMyCowboy();
-        Cowboy cowboy2 = cowboys.getEnemies().get(0);
+        //Host is places south and other player is placed north.
+        Cowboy cowboy1 = cowboys.getCowboy(1);
+        Cowboy cowboy2 = cowboys.getCowboy(2);
 
         cowboy2.setPos(1);
         cowboy2.stop(new CowboyOrientation(CowboyOrientation.STOP_S));
