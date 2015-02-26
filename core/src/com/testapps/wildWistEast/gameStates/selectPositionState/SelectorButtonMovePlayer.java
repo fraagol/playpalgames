@@ -14,6 +14,7 @@ public class SelectorButtonMovePlayer implements IButtonsSubscribed {
     private SelectPositionState state;
     private Boolean enabled;
     private Integer boardPos;
+    private final int BOUNDING_TEMPORAL_BOX = 150;
 
     public SelectorButtonMovePlayer(Texture texture, Integer boardPos, SelectPositionState state) {
         this.texture = texture;
@@ -63,8 +64,8 @@ public class SelectorButtonMovePlayer implements IButtonsSubscribed {
     public void screenTouched(int screenX, int screenY) {
         if(this.enabled == false)
             return;
-        if (screenX >= this.pos.x && screenX <= this.pos.x + this.texture.getWidth() &&
-                screenY >= this.pos.y && screenY <= this.pos.y + this.texture.getHeight()) {
+        if (screenX + BOUNDING_TEMPORAL_BOX >= this.pos.x && screenX - BOUNDING_TEMPORAL_BOX <= this.pos.x + this.texture.getWidth() &&
+                screenY + BOUNDING_TEMPORAL_BOX >= this.pos.y && screenY - BOUNDING_TEMPORAL_BOX <= this.pos.y + this.texture.getHeight()) {
             state.selectorPushed(this);
         }
     }

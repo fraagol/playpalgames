@@ -13,6 +13,7 @@ public class SelectorButtonShoot implements IButtonsSubscribed {
     private SelectShootState state;
     private Integer boardPos;
     private Boolean enabled;
+    private final int BOUNDING_TEMPORAL_BOX = 200;
 
     public SelectorButtonShoot(Texture texture, Integer i, SelectShootState selectShootState) {
         this.texture = texture;
@@ -63,8 +64,8 @@ public class SelectorButtonShoot implements IButtonsSubscribed {
         if(this.enabled == false)
             return;
 
-        if (screenX >= this.pos.x && screenX <= this.pos.x + this.texture.getWidth() &&
-                screenY >= this.pos.y && screenY <= this.pos.y + this.texture.getHeight()) {
+        if (screenX + BOUNDING_TEMPORAL_BOX >= this.pos.x && screenX - BOUNDING_TEMPORAL_BOX <= this.pos.x + this.texture.getWidth() &&
+                screenY + BOUNDING_TEMPORAL_BOX >= this.pos.y && screenY - BOUNDING_TEMPORAL_BOX <= this.pos.y + this.texture.getHeight()) {
             state.selectorPushed(this);
         }
     }
