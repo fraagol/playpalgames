@@ -53,13 +53,9 @@ public class SelectorButtonShoot implements IButtonsSubscribed {
         return this.texture.getHeight();
     }
 
+    @Override
     public Integer getBoardPos(){
         return this.boardPos;
-    }
-
-    @Override
-    public TurnAction.Action getAction() {
-        return TurnAction.Action.SHOOT;
     }
 
     @Override

@@ -14,6 +14,7 @@ import com.testapps.wildWistEast.characters.cowboy.CowboyFactory;
 import com.testapps.wildWistEast.characters.cowboy.CowboysBand;
 import com.testapps.wildWistEast.gameGUI.Bullets;
 import com.testapps.wildWistEast.gameGUI.Lives;
+import com.testapps.wildWistEast.gameStates.ActionMessage;
 import com.testapps.wildWistEast.gameStates.IGameStates;
 import com.testapps.wildWistEast.gameStates.InitGameState;
 import com.testapps.wildWistEast.gameStates.MainState;
@@ -56,8 +57,8 @@ public class BattleFieldController {
         initGameState = new InitGameState(cowboysBand);
         mainState = new MainState(this.gameButtons);
         selectPositionState = new SelectPositionState(this, gameButtons, cowboysBand);
-        selectShootState = new SelectShootState(gameButtons, cowboysBand, bullets);
-        selectRechargeState = new SelectRechargeState(cowboysBand, bullets);
+        selectShootState = new SelectShootState(this, gameButtons, cowboysBand, bullets);
+        selectRechargeState = new SelectRechargeState(this, cowboysBand, bullets);
 
         initGameState.init();
         state = initGameState;
@@ -96,18 +97,18 @@ public class BattleFieldController {
         state.init();
     }
 
-    public void buttonPressed(IButtonsSubscribed buttonSubscribed) {
+    public void buttonPressed(ActionMessage actionMessage) {
 
-        if(buttonSubscribed instanceof SelectorButtonMovePlayer)
+        if(actionMessage.getTurnAction() == TurnAction.Action.MOVE)
         {
             state = this.mainState;
         }
         state.init();
 
         try {
-            gameController.sendTurn(new TurnAction(buttonSubscribed.getAction(),
+            gameController.sendTurn(new TurnAction(actionMessage.getTurnAction(),
                     cowboysBand.getMyCowboy().getID(),
-                    buttonSubscribed.getBoardPos()), null, false);
+                    actionMessage.getBoardPos()), null, false);
             gameController.setMyTurn(false);
         } catch (IOException e) {
             e.printStackTrace();
@@ -120,6 +121,9 @@ public class BattleFieldController {
         }
         else if(turnAction.getAction() == TurnAction.Action.SHOOT) {
             cowboysBand.getCowboy(turnAction.getPlayer()).shootTo(turnAction.getTarget());
+        }
+        else if(turnAction.getAction() == TurnAction.Action.RELOAD) {
+            cowboysBand.getCowboy(turnAction.getPlayer()).rechargeGun();
         }
 
         state = this.mainState;

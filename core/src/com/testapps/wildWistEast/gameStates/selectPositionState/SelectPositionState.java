@@ -8,7 +8,9 @@ import com.testapps.wildWistEast.BattleFieldController;
 import com.testapps.wildWistEast.GameBoard;
 import com.testapps.wildWistEast.buttons.GameButtons;
 import com.testapps.wildWistEast.characters.cowboy.CowboysBand;
+import com.testapps.wildWistEast.gameStates.ActionMessage;
 import com.testapps.wildWistEast.gameStates.IGameStates;
+import com.testapps.wildWistEast.turn.TurnAction;
 
 import java.util.HashMap;
 
@@ -91,7 +93,7 @@ public class SelectPositionState implements IGameStates {
     public void selectorPushed (SelectorButtonMovePlayer selector)
     {
         this.band.getMyCowboy().moveTo(selector.getBoardPos());
-        battleFieldController.buttonPressed(selector);
+        battleFieldController.buttonPressed(new ActionMessage(TurnAction.Action.MOVE, selector.getBoardPos()));
         for(SelectorButtonMovePlayer bttn : nextPossibleMovements)
         {
             bttn.disable();

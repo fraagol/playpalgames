@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Vector2;
 import com.testapps.wildWistEast.GameBoard;
+import com.testapps.wildWistEast.gameStates.ActionMessage;
 import com.testapps.wildWistEast.turn.TurnAction;
 import com.testapps.wildWistEast.buttons.IButtonsSubscribed;
 
@@ -11,20 +12,19 @@ public class SelectorButtonMovePlayer implements IButtonsSubscribed {
     private Texture texture;
     private Vector2 pos;
     private SelectPositionState state;
-    private Integer boardPos;
     private Boolean enabled;
-
+    private Integer boardPos;
 
     public SelectorButtonMovePlayer(Texture texture, Integer boardPos, SelectPositionState state) {
         this.texture = texture;
         this.pos = GameBoard.getScreenPos(boardPos);
         this.pos.x -= texture.getWidth() / 2;
         this.pos.y -= texture.getHeight() / 2;
-        this.boardPos = boardPos;
         this.state = state;
+        this.boardPos = boardPos;
         enabled = false;
-
     }
+
 
     public void render(SpriteBatch batch) {
         if(this.enabled == false)
@@ -42,15 +42,6 @@ public class SelectorButtonMovePlayer implements IButtonsSubscribed {
         this.enabled = false;
     }
 
-    public Integer getBoardPos(){
-        return this.boardPos;
-    }
-
-    @Override
-    public TurnAction.Action getAction() {
-        return TurnAction.Action.MOVE;
-    }
-
     public void dispose() {
         texture.dispose();
     }
@@ -61,6 +52,11 @@ public class SelectorButtonMovePlayer implements IButtonsSubscribed {
 
     public int getHeight() {
         return this.texture.getHeight();
+    }
+
+    @Override
+    public Integer getBoardPos() {
+        return this.boardPos;
     }
 
     @Override
