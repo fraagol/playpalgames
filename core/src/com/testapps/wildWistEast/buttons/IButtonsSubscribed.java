@@ -16,6 +16,4 @@ public interface IButtonsSubscribed {
     public void disable();
 
     public Integer getBoardPos();
-
-    public TurnAction.Action getAction();
 }

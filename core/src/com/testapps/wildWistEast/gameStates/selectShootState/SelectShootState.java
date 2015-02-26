@@ -5,12 +5,15 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.Array;
+import com.testapps.wildWistEast.BattleFieldController;
 import com.testapps.wildWistEast.GameBoard;
 import com.testapps.wildWistEast.buttons.GameButtons;
 import com.testapps.wildWistEast.characters.cowboy.Cowboy;
 import com.testapps.wildWistEast.characters.cowboy.CowboysBand;
 import com.testapps.wildWistEast.gameGUI.Bullets;
+import com.testapps.wildWistEast.gameStates.ActionMessage;
 import com.testapps.wildWistEast.gameStates.IGameStates;
+import com.testapps.wildWistEast.turn.TurnAction;
 
 import java.util.HashMap;
 
@@ -20,8 +23,10 @@ public class SelectShootState implements IGameStates{
     Array<SelectorButtonShoot> nextPossibleShoots;
     CowboysBand band;
     Bullets bullets;
+    BattleFieldController battleFieldController;
 
-    public SelectShootState(GameButtons gameButtons, CowboysBand band, Bullets bullets) {
+    public SelectShootState(BattleFieldController battleFieldController, GameButtons gameButtons, CowboysBand band, Bullets bullets) {
+        this.battleFieldController = battleFieldController;
         this.gameButtons = gameButtons;
         this.band = band;
         this.bullets = bullets;
@@ -98,7 +103,7 @@ public class SelectShootState implements IGameStates{
                 objective.shooted();
             }
 
-            //battleFieldController.buttonPressed(selector);
+            battleFieldController.buttonPressed(new ActionMessage(TurnAction.Action.SHOOT, selectorButtonShoot.getBoardPos()));
             for (SelectorButtonShoot bttn : nextPossibleShoots) {
                 bttn.disable();
             }
