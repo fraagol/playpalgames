@@ -24,7 +24,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".StartActivity_"
+            android:name=".StartActivity_"			
             android:label="@string/app_name"
             android:launchMode="singleTask">
             <intent-filter>
@@ -36,7 +36,8 @@
         <activity
             android:name=".AndroidLauncher"
             android:label="@string/cowboy"
-            android:launchMode="standard">
+            android:launchMode="standard"
+			android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
