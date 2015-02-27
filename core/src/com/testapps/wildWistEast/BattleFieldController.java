@@ -98,11 +98,7 @@ public class BattleFieldController {
     }
 
     public void buttonPressed(ActionMessage actionMessage) {
-
-        if(actionMessage.getTurnAction() == TurnAction.Action.MOVE)
-        {
-            state = this.mainState;
-        }
+        state = this.mainState;
         state.init();
 
         try {
