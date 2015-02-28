@@ -76,7 +76,13 @@ public class BattleFieldController {
         backGround.render(batch);
         state.render(batch);
         cowboysBand.render(batch);
-        gameButtons.render(batch);
+        if(gameController.isMyTurn()) {
+            gameButtons.showMenuButtons();
+            gameButtons.render(batch);
+        }
+        else {
+            gameButtons.hideMenuButtons();
+        }
         lives.render(batch);
         bullets.render(batch);
     }
