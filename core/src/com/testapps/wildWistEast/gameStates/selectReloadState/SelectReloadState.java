@@ -1,4 +1,4 @@
-package com.testapps.wildWistEast.gameStates.selectRechargeState;
+package com.testapps.wildWistEast.gameStates.selectReloadState;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.testapps.wildWistEast.BattleFieldController;
@@ -9,12 +9,12 @@ import com.testapps.wildWistEast.gameStates.ActionMessage;
 import com.testapps.wildWistEast.gameStates.IGameStates;
 import com.testapps.wildWistEast.turn.TurnAction;
 
-public class SelectRechargeState implements IGameStates {
+public class SelectReloadState implements IGameStates {
     private final CowboysBand band;
     private final Bullets bullets;
     BattleFieldController battleFieldController;
 
-    public SelectRechargeState(BattleFieldController battleFieldController, CowboysBand cowboysBand, Bullets bullets) {
+    public SelectReloadState(BattleFieldController battleFieldController, CowboysBand cowboysBand, Bullets bullets) {
         this.battleFieldController = battleFieldController;
         this.band = cowboysBand;
         this.bullets = bullets;
