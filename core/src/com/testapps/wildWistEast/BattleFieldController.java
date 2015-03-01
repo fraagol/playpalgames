@@ -123,6 +123,10 @@ public class BattleFieldController {
         }
         else if(turnAction.getAction() == TurnAction.Action.SHOOT) {
             cowboysBand.getCowboy(turnAction.getPlayer()).shootTo(turnAction.getTarget());
+            Cowboy shootedCowboy = GameBoard.getCowboyAt(turnAction.getTarget());
+            if(shootedCowboy != null) {
+                shootedCowboy.shooted();
+            }
         }
         else if(turnAction.getAction() == TurnAction.Action.RELOAD) {
             cowboysBand.getCowboy(turnAction.getPlayer()).rechargeGun();
