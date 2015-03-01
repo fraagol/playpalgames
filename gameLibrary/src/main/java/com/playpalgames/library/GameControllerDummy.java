@@ -19,7 +19,7 @@ public class GameControllerDummy extends GameController {
 
     @Override
     public boolean isMyTurn() {
-        return false;
+        return true;
     }
 
     @Override

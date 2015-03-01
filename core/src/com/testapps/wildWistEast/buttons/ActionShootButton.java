@@ -29,6 +29,7 @@ public class ActionShootButton implements IActionButton{
 
     @Override
     public Boolean touchEvent(int screenX, int screenY) {
+        if(visible == false) return false;
         Boolean result = false;
         if(screenX >= this.pos.x && screenX <= this.pos.x + this.texture.getWidth() &&
                 screenY >= this.pos.y && screenY <= this.pos.y + this.texture.getHeight())

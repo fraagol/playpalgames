@@ -8,7 +8,6 @@ import com.testapps.wildWistEast.buttons.ActionRechargeButton;
 import com.testapps.wildWistEast.buttons.ActionShootButton;
 import com.testapps.wildWistEast.buttons.GameButtons;
 import com.testapps.wildWistEast.buttons.IActionButton;
-import com.testapps.wildWistEast.buttons.IButtonsSubscribed;
 import com.testapps.wildWistEast.characters.cowboy.Cowboy;
 import com.testapps.wildWistEast.characters.cowboy.CowboyFactory;
 import com.testapps.wildWistEast.characters.cowboy.CowboysBand;
@@ -19,9 +18,9 @@ import com.testapps.wildWistEast.gameStates.IGameStates;
 import com.testapps.wildWistEast.gameStates.InitGameState;
 import com.testapps.wildWistEast.gameStates.MainState;
 import com.testapps.wildWistEast.gameStates.selectPositionState.SelectPositionState;
-import com.testapps.wildWistEast.gameStates.selectPositionState.SelectorButtonMovePlayer;
-import com.testapps.wildWistEast.gameStates.selectRechargeState.SelectRechargeState;
+import com.testapps.wildWistEast.gameStates.selectReloadState.SelectReloadState;
 import com.testapps.wildWistEast.gameStates.selectShootState.SelectShootState;
+import com.testapps.wildWistEast.messageHandler.MssgHandler;
 import com.testapps.wildWistEast.turn.TurnAction;
 
 import java.io.IOException;
@@ -37,10 +36,11 @@ public class BattleFieldController {
     private MainState mainState;
     private SelectPositionState selectPositionState;
     private SelectShootState selectShootState;
-    private SelectRechargeState selectRechargeState;
+    private SelectReloadState selectReloadState;
     private Lives lives;
     private Bullets bullets;
     private BackGround backGround;
+    private MssgHandler mssgHandler;
 
     public BattleFieldController(GameController gameController) {
         this.cowboyFactory = new CowboyFactory(gameController.isHost());
@@ -58,7 +58,8 @@ public class BattleFieldController {
         mainState = new MainState(this.gameButtons);
         selectPositionState = new SelectPositionState(this, gameButtons, cowboysBand);
         selectShootState = new SelectShootState(this, gameButtons, cowboysBand, bullets);
-        selectRechargeState = new SelectRechargeState(this, cowboysBand, bullets);
+        selectReloadState = new SelectReloadState(this, cowboysBand, bullets);
+        mssgHandler = new MssgHandler(cowboysBand, lives);
 
         initGameState.init();
         state = initGameState;
@@ -76,7 +77,13 @@ public class BattleFieldController {
         backGround.render(batch);
         state.render(batch);
         cowboysBand.render(batch);
-        gameButtons.render(batch);
+        if(gameController.isMyTurn()) {
+            gameButtons.showMenuButtons();
+            gameButtons.render(batch);
+        }
+        else {
+            gameButtons.hideMenuButtons();
+        }
         lives.render(batch);
         bullets.render(batch);
     }
@@ -92,7 +99,7 @@ public class BattleFieldController {
         }
         else if(actionBttn instanceof ActionRechargeButton)
         {
-            state = this.selectRechargeState;
+            state = this.selectReloadState;
         }
         state.init();
     }
@@ -112,16 +119,7 @@ public class BattleFieldController {
     }
 
     public void handleNewTurn(TurnAction turnAction) {
-        if(turnAction.getAction() == TurnAction.Action.MOVE) {
-            cowboysBand.getCowboy(turnAction.getPlayer()).moveTo(turnAction.getTarget());
-        }
-        else if(turnAction.getAction() == TurnAction.Action.SHOOT) {
-            cowboysBand.getCowboy(turnAction.getPlayer()).shootTo(turnAction.getTarget());
-        }
-        else if(turnAction.getAction() == TurnAction.Action.RELOAD) {
-            cowboysBand.getCowboy(turnAction.getPlayer()).rechargeGun();
-        }
-
+        mssgHandler.handle(turnAction);
         state = this.mainState;
         state.init();
     }
