@@ -59,7 +59,7 @@ public class BattleFieldController {
         selectPositionState = new SelectPositionState(this, gameButtons, cowboysBand);
         selectShootState = new SelectShootState(this, gameButtons, cowboysBand, bullets);
         selectReloadState = new SelectReloadState(this, cowboysBand, bullets);
-        mssgHandler = new MssgHandler(cowboysBand, lives);
+        mssgHandler = new MssgHandler(cowboysBand, lives, bullets);
 
         initGameState.init();
         state = initGameState;
