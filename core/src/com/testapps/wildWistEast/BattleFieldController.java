@@ -31,7 +31,7 @@ public class BattleFieldController {
     GameButtons gameButtons;
 
     private IGameStates state;
-    private GameController gameController;
+    private MessageController messageController;
     private InitGameState initGameState;
     private MainState mainState;
     private SelectPositionState selectPositionState;
@@ -42,13 +42,13 @@ public class BattleFieldController {
     private BackGround backGround;
     private MssgHandler mssgHandler;
 
-    public BattleFieldController(GameController gameController) {
-        this.cowboyFactory = new CowboyFactory(gameController.isHost());
+    public BattleFieldController(MessageController messageController, boolean host) {
+        this.cowboyFactory = new CowboyFactory(host);
         this.cowboysBand = new CowboysBand();
         this.gameButtons = new GameButtons(this);
         this.lives = new Lives();
         this.bullets = new Bullets();
-        this.gameController = gameController;
+        this.messageController = messageController;
         this.backGround = new BackGround();
 
         createCowboys();
@@ -59,7 +59,7 @@ public class BattleFieldController {
         selectPositionState = new SelectPositionState(this, gameButtons, cowboysBand);
         selectShootState = new SelectShootState(this, gameButtons, cowboysBand, bullets);
         selectReloadState = new SelectReloadState(this, cowboysBand, bullets);
-        mssgHandler = new MssgHandler(cowboysBand, lives);
+        mssgHandler = new MssgHandler(cowboysBand, lives, bullets);
 
         initGameState.init();
         state = initGameState;
@@ -73,32 +73,36 @@ public class BattleFieldController {
         this.cowboysBand.setMyPlayerID(cowboyI.getID());
     }
 
-    public void render(SpriteBatch batch, float elapsedTime) {
+    public void render(SpriteBatch batch) {
         backGround.render(batch);
         state.render(batch);
         cowboysBand.render(batch);
-        if(gameController.isMyTurn()) {
+
+        if(messageController.getMyTurn() != null) {
+            gameButtons.hideMenuButtons();
+        } else {
             gameButtons.showMenuButtons();
             gameButtons.render(batch);
         }
-        else {
-            gameButtons.hideMenuButtons();
+
+        if(messageController.everybodyReady()) {
+            mssgHandler.handle(messageController.getMyTurn());
+            mssgHandler.handle(messageController.getEnemyTurn());
+            messageController.reset();
+            state = this.mainState;
+            state.init();
         }
+
         lives.render(batch);
         bullets.render(batch);
     }
 
     public void buttonPressed(IActionButton actionBttn) {
-        if(actionBttn instanceof ActionMoveButton)
-        {
+        if (actionBttn instanceof ActionMoveButton) {
             state = this.selectPositionState;
-        }
-        else if(actionBttn instanceof ActionShootButton)
-        {
+        } else if (actionBttn instanceof ActionShootButton) {
             state = this.selectShootState;
-        }
-        else if(actionBttn instanceof ActionRechargeButton)
-        {
+        } else if (actionBttn instanceof ActionRechargeButton) {
             state = this.selectReloadState;
         }
         state.init();
@@ -108,20 +112,9 @@ public class BattleFieldController {
         state = this.mainState;
         state.init();
 
-        try {
-            gameController.sendTurn(new TurnAction(actionMessage.getTurnAction(),
-                    cowboysBand.getMyCowboy().getID(),
-                    actionMessage.getBoardPos()), null, false);
-            gameController.setMyTurn(false);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    public void handleNewTurn(TurnAction turnAction) {
-        mssgHandler.handle(turnAction);
-        state = this.mainState;
-        state.init();
+        messageController.iDoAction(new TurnAction(actionMessage.getTurnAction(),
+                cowboysBand.getMyCowboy().getID(),
+                actionMessage.getBoardPos()));
     }
 
     public void dispose() {

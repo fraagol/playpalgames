@@ -22,8 +22,6 @@ public class SelectReloadState implements IGameStates {
 
     @Override
     public void init() {
-        this.band.getMyCowboy().rechargeGun();
-        this.bullets.recharge();
         battleFieldController.buttonPressed(new ActionMessage(TurnAction.Action.RELOAD, GameBoard.getBoardPos(band.getMyCowboy())));
     }
 

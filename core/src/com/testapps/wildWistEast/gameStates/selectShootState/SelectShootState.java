@@ -96,13 +96,6 @@ public class SelectShootState implements IGameStates{
 
     public void selectorPushed(SelectorButtonShoot selectorButtonShoot) {
         if(this.band.getMyCowboy().canShoot()) {
-            this.band.getMyCowboy().shootTo(selectorButtonShoot.getBoardPos());
-            this.bullets.shoot();
-            Cowboy objective = GameBoard.getCowboyAt(selectorButtonShoot.getBoardPos());
-            if(objective != null) {
-                objective.shooted();
-            }
-
             battleFieldController.buttonPressed(new ActionMessage(TurnAction.Action.SHOOT, selectorButtonShoot.getBoardPos()));
             for (SelectorButtonShoot bttn : nextPossibleShoots) {
                 bttn.disable();

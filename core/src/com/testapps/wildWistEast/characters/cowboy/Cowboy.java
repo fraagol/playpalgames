@@ -34,9 +34,7 @@ public class Cowboy {
         {
             time += Gdx.graphics.getDeltaTime();
             updatePos(Gdx.graphics.getDeltaTime());
-            if(this.moving) {
-                this.view.updateWalkingAnimation(this.currentDirection);
-            }
+            this.view.updateWalkingAnimation(this.currentDirection);
         }
         if(this.shooting)
         {

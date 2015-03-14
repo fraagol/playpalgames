@@ -1,6 +1,7 @@
 package com.testapps.wildWistEast.messageHandler;
 
 import com.testapps.wildWistEast.characters.cowboy.CowboysBand;
+import com.testapps.wildWistEast.gameGUI.Bullets;
 import com.testapps.wildWistEast.gameGUI.Lives;
 import com.testapps.wildWistEast.turn.TurnAction;
 
@@ -9,10 +10,10 @@ public class MssgHandler {
     MssgHandlerShoot mssgHandlerShoot;
     MssgHandlerReload mssgHandlerReload;
 
-    public MssgHandler(CowboysBand cowboysBand, Lives lives) {
+    public MssgHandler(CowboysBand cowboysBand, Lives lives, Bullets bullets) {
         this.mssgHandlerMove = new MssgHandlerMove(cowboysBand);
-        this.mssgHandlerShoot = new MssgHandlerShoot(cowboysBand, lives);
-        this.mssgHandlerReload = new MssgHandlerReload(cowboysBand);
+        this.mssgHandlerShoot = new MssgHandlerShoot(cowboysBand, lives, bullets);
+        this.mssgHandlerReload = new MssgHandlerReload(cowboysBand, bullets);
     }
 
     public void handle(TurnAction turnAction) {
